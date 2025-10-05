@@ -111,7 +111,7 @@ const contentCategories = [
     icon: Building,
     gradient: "from-indigo-500 to-purple-500",
     seoKeywords: [
-      "uae rentals news",
+      "Ijara Hub news",
       "dubai rental company updates",
       "rental industry news",
     ],
@@ -388,9 +388,9 @@ const allContent = [
   {
     id: 10,
     title:
-      "UAE Rentals Wins 'Best Luxury Rental Platform 2024' - Dubai Business Excellence Awards",
+      "Ijara Hub Wins 'Best Luxury Rental Platform 2024' - Dubai Business Excellence Awards",
     excerpt:
-      "UAE Rentals honored with prestigious award recognizing outstanding service in luxury car and property rentals across Dubai and UAE market.",
+      "Ijara Hub honored with prestigious award recognizing outstanding service in luxury car and property rentals across Dubai and UAE market.",
     image:
       "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&h=400&fit=crop",
     category: "Company Updates",
@@ -405,7 +405,7 @@ const allContent = [
     priority: "high",
     seoScore: 82,
     keywords: [
-      "uae rentals award",
+      "Ijara Hub award",
       "best rental company dubai",
       "luxury rental platform",
     ],
@@ -413,9 +413,9 @@ const allContent = [
   {
     id: 11,
     title:
-      "New Partnership: UAE Rentals Teams with Emaar for Exclusive Property Access",
+      "New Partnership: Ijara Hub Teams with Emaar for Exclusive Property Access",
     excerpt:
-      "Strategic partnership provides UAE Rentals customers exclusive access to premium properties in Downtown Dubai, Dubai Marina, and Arabian Ranches developments.",
+      "Strategic partnership provides Ijara Hub customers exclusive access to premium properties in Downtown Dubai, Dubai Marina, and Arabian Ranches developments.",
     image:
       "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&h=400&fit=crop",
     category: "Company Updates",
@@ -492,7 +492,7 @@ const BlogNewsHub = () => {
     <div className="min-h-screen bg-white ">
       {/* SEO Meta Information - Hidden but important for search engines */}
       <div style={{ display: "none" }}>
-        <h1>Dubai Luxury Car Rental & Property Rental Blog - UAE Rentals</h1>
+        <h1>Dubai Luxury Car Rental & Property Rental Blog - Ijara Hub</h1>
         <meta
           name="description"
           content="Expert guides on luxury car rental Dubai, property rental UAE, and travel tips. Latest news, deals, and insider advice for premium rentals in Dubai and UAE."
@@ -505,13 +505,13 @@ const BlogNewsHub = () => {
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Blog",
-            name: "UAE Rentals Blog & News",
+            name: "Ijara Hub Blog & News",
             description:
               "Latest news and guides about luxury car rentals and property rentals in Dubai and UAE",
             url: "https://uaerentals.com/blog-news",
             publisher: {
               "@type": "Organization",
-              name: "UAE Rentals",
+              name: "Ijara Hub",
             },
           })}
         </script>

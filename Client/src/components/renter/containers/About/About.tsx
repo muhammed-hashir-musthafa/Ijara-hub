@@ -145,7 +145,7 @@ const About = () => {
             <div className="flex items-center justify-center mb-6">
               <Sparkles className="h-6 w-6 text-amber-400 mr-3 animate-pulse" />
               <Badge className="bg-gradient-to-r from-amber-500 to-orange-600 text-white border-0 shadow-lg px-4 py-2 text-sm font-semibold">
-                About UAE Rentals
+                About Ijara Hub
               </Badge>
               <Sparkles className="h-6 w-6 text-amber-400 ml-3 animate-pulse" />
             </div>
@@ -274,7 +274,7 @@ const About = () => {
                 <div className="group hover:bg-gray-50 p-4 rounded-xl transition-all duration-300 transform hover:-translate-x-2">
                   <p className="group-hover:text-gray-800 transition-colors">
                     Founded in 2009 with a vision to transform the luxury rental
-                    experience in the UAE, UAE Rentals began as a boutique
+                    experience in the UAE, Ijara Hub began as a boutique
                     service catering to high-end clientele seeking exceptional
                     accommodations and premium vehicles.
                   </p>
@@ -405,7 +405,7 @@ const About = () => {
               </span>
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              The experienced professionals behind UAE Rentals&apos; success and
+              The experienced professionals behind Ijara Hub&apos; success and
               commitment to excellence
             </p>
           </div>

@@ -91,7 +91,7 @@ export function Footer() {
               </div>
               <div className="flex flex-col">
                 <span className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                  UAE Rentals
+                  Ijara Hub
                 </span>
                 <span className="text-xs text-amber-400 font-medium -mt-1">
                   Premium Luxury
@@ -174,7 +174,7 @@ export function Footer() {
           <div className="flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0">
             <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-6">
               <p className="text-gray-400 text-sm">
-                © 2024 UAE Rentals. All rights reserved.
+                © 2024 Ijara Hub. All rights reserved.
               </p>
               <div className="flex items-center space-x-1 text-xs text-gray-500">
                 <span>Made with</span>

@@ -34,7 +34,7 @@ const termsSections = [
     icon: CheckCircle,
     gradient: "from-green-500 to-emerald-500",
     content:
-      "By accessing and using UAE Rentals platform, you accept and agree to be bound by the terms and provision of this agreement. These terms constitute a legally binding agreement between you and UAE Rentals.",
+      "By accessing and using Ijara Hub platform, you accept and agree to be bound by the terms and provision of this agreement. These terms constitute a legally binding agreement between you and Ijara Hub.",
     important: true,
   },
   {
@@ -43,7 +43,7 @@ const termsSections = [
     icon: Shield,
     gradient: "from-blue-500 to-cyan-500",
     content:
-      "Permission is granted to temporarily use UAE Rentals for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title.",
+      "Permission is granted to temporarily use Ijara Hub for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title.",
     details: [
       "Personal and non-commercial use only",
       "Temporary access to platform services",
@@ -57,7 +57,7 @@ const termsSections = [
     icon: Users,
     gradient: "from-purple-500 to-pink-500",
     content:
-      "UAE Rentals provides a platform for connecting property owners and vehicle owners with potential renters. We facilitate bookings but are not responsible for the actual rental agreements between parties.",
+      "Ijara Hub provides a platform for connecting property owners and vehicle owners with potential renters. We facilitate bookings but are not responsible for the actual rental agreements between parties.",
     details: [
       "Platform facilitation service only",
       "Connection between owners and renters",
@@ -165,7 +165,7 @@ export const TermsPage = () => {
 
             <p className="text-xl md:text-2xl text-white/90 font-light max-w-4xl mx-auto leading-relaxed animate-fade-in-up animation-delay-300">
               Please read these terms carefully before using our services. These
-              terms govern your use of UAE Rentals platform and services.
+              terms govern your use of Ijara Hub platform and services.
             </p>
 
             <div className="mt-8 flex items-center justify-center animate-fade-in-up animation-delay-500">
@@ -376,7 +376,7 @@ export const TermsPage = () => {
                     Important Notice
                   </h4>
                   <p className="text-amber-700 text-sm leading-relaxed">
-                    By using UAE Rentals services, you acknowledge that you have
+                    By using Ijara Hub services, you acknowledge that you have
                     read, understood, and agree to be bound by these Terms and
                     Conditions. These terms may be updated periodically, and
                     continued use constitutes acceptance of any changes.

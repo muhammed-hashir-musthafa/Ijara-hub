@@ -58,7 +58,7 @@ export function Header() {
             </div>
             <div className="flex flex-col">
               <span className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent group-hover:from-amber-600 group-hover:to-orange-600 transition-all duration-300">
-                UAE Rentals
+                Ijara Hub
               </span>
               <span className="text-xs text-gray-500 font-medium -mt-1">
                 Premium Luxury

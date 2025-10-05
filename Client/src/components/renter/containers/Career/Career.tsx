@@ -226,7 +226,7 @@ const CareersPage = () => {
               <span className="bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 bg-clip-text text-transparent">
                 Career
               </span>{" "}
-              with UAE Rentals
+              with Ijara Hub
             </h1>
 
             <p className="text-xl md:text-2xl text-white/90 font-light max-w-4xl mx-auto leading-relaxed animate-fade-in-up animation-delay-300">
@@ -279,7 +279,7 @@ const CareersPage = () => {
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
               Why Choose{" "}
               <span className="bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">
-                UAE Rentals?
+                Ijara Hub?
               </span>
             </h2>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">

@@ -3,8 +3,24 @@ import React from "react";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Contact | Ijara Hub Rental Services",
-  description: "Get in touch with Ijara Hub Rental Services for any inquiries or support.",
+  title: "Contact Us | Ijara Hub Rental Services",
+  description:
+    "Get in touch with Ijara Hub Rental Services for any inquiries or support.",
+  keywords: [
+    "Contact",
+    "Ijara Hub",
+    "Rental Services",
+    "Support",
+    "Inquiries",
+    "Customer Service",
+    "Assistance",
+    "Help",
+    "Feedback",
+    "Communication",
+    "Rental Support",
+    "Contact Us",
+    "Ijara Hub Contact",
+  ],
 };
 const Contact = () => {
   return (

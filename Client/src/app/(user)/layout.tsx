@@ -8,13 +8,13 @@ import { Footer } from "@/components/renter/ui/footer";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "UAE Rentals - Premium Room & Car Rentals",
+  title: "Ijara Hub | Ijara Hub - Premium Room & Car Rentals",
   description:
     "Discover luxury room and car rentals across the UAE. Premium service, unmatched quality.",
   keywords: [
     "Ijara Hub",
     "Rental Services",
-    "UAE Rentals",
+    "Ijara Hub",
     "Car Rentals",
     "Property Rentals",
     "Luxury Rentals",
