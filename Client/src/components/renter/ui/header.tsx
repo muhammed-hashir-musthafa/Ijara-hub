@@ -61,7 +61,7 @@ export function Header() {
                 Ijara Hub
               </span>
               <span className="text-xs text-gray-500 font-medium -mt-1">
-                Premium Luxury
+                Drive it. Live it. Love it.{" "}
               </span>
             </div>
           </div>

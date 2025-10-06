@@ -94,7 +94,7 @@ export function Footer() {
                   Ijara Hub
                 </span>
                 <span className="text-xs text-amber-400 font-medium -mt-1">
-                  Premium Luxury
+                  Drive it. Live it. Love it.{" "}
                 </span>
               </div>
             </div>
