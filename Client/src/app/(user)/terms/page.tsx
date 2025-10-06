@@ -2,7 +2,7 @@ import TermsPage from "@/components/renter/containers/TermsAndConditions/TermsAn
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Terms and Conditions | Ijara Hub Rental Services",
+  title: "Terms and Conditions | Ijara Hub Premium Rental Service",
   description: "Read the terms and conditions for using Ijara Hub services.",
   keywords: [
     "Ijara Hub",

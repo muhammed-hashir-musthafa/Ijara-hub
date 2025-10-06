@@ -4,9 +4,41 @@ import { Footer } from "@/components/owner/ui/footer";
 import Sidebar from "@/components/owner/ui/sidebar";
 
 export const metadata: Metadata = {
-  title: "Owner Portal | Ijara Hub Premium Room & Car Rentals",
-  description: "Manage your rentals, bookings, and performance insights",
-  keywords: [""],
+  title: "Owner Portal | Ijara Hub Premium Rental Service",
+  description:
+    "Manage your properties, bookings, and performance insights on Ijara Hub.",
+  keywords: [
+    "Ijara Hub",
+    "Owner Portal",
+    "Rental Services",
+    "Property Management",
+    "Car Rentals",
+    "Property Rentals",
+    "Luxury Rentals",
+    "Room Rentals",
+    "Premium Service",
+    "Vehicle Hire",
+    "Apartment Rentals",
+    "Vacation Rentals",
+    "Short-term Rentals",
+    "Long-term Rentals",
+    "Rental Deals",
+    "Customer Satisfaction",
+    "Rental Performance",
+    "Rental Insights",
+    "Data-Driven Decisions",
+    "Business Optimization",
+    "Rental Analytics",
+    "Performance Tracking",
+    "Insightful Reports",
+    "Data Visualization",
+    "Rental Metrics",
+    "Revenue Analysis",
+    "Occupancy Rates",
+    "Booking Management",
+    "Rental Requests",
+
+  ],
 };
 
 export default function OwnerLayout({
