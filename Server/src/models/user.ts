@@ -21,7 +21,23 @@ const UserSchema = new mongoose.Schema(
     password: {
       type: String,
       required: [true, "Password is required"],
-      minlength: [6, "Password must be at least 6 characters"]
+      minlength: [6, "Password must be at least 6 characters"],
+      match: [
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/,
+        "Password must contain at least one uppercase letter, one lowercase letter, and one number"
+      ]
+    },
+    gender: {
+      type: String,
+      required: [true, "Gender is required"],
+      enum: {
+        values: ["male", "female", "other"],
+        message: "Gender must be male, female, or other"
+      }
+    },
+    dateOfBirth: {
+      type: Date,
+      required: [true, "Date of birth is required"]
     },
     role: {
       type: String,
@@ -60,7 +76,19 @@ const UserSchema = new mongoose.Schema(
     carRentals: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: "CarRental"
-    }]
+    }],
+    isActive: {
+      type: Boolean,
+      default: true
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false
+    },
+    lastLogin: {
+      type: Date,
+      default: null
+    }
   },
   {
     timestamps: true,
@@ -77,7 +105,7 @@ UserSchema.index({ createdAt: -1 });
 // Pre-save hook for password hashing
 UserSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
-  
+
   try {
     const salt = await bcrypt.genSalt(12);
     this.password = await bcrypt.hash(this.password, salt);
