@@ -2,24 +2,27 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Use Node 20
+      # --- Client Build ---
+      - name: Setup Node for Client
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: npm
+          cache-dependency-path: Client/package-lock.json
 
-      - name: Install Client deps
+      - name: Install Client dependencies
         working-directory: Client
         run: npm ci || npm install
 
@@ -31,7 +34,15 @@ jobs:
         working-directory: Client
         run: npm run build
 
-      - name: Install Server deps
+      # --- Server Build ---
+      - name: Setup Node for Server
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: Server/package-lock.json
+
+      - name: Install Server dependencies
         working-directory: Server
         run: npm ci || npm install
 
@@ -39,6 +50,7 @@ jobs:
         working-directory: Server
         run: npm run build
 
+      # --- Docker Build ---
       - name: Docker Buildx setup
         uses: docker/setup-buildx-action@v3
 
@@ -46,4 +58,3 @@ jobs:
         run: |
           docker build -t ijara-hub-client ./Client
           docker build -t ijara-hub-server ./Server
-
