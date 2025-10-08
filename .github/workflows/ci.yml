@@ -7,15 +7,13 @@ on:
     branches: [main]
 
 jobs:
-  build:
+  client-build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # --- Client Build ---
-      - name: Setup Node for Client
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -24,7 +22,7 @@ jobs:
 
       - name: Install Client dependencies
         working-directory: Client
-        run: npm ci || npm install
+        run: npm ci
 
       - name: Lint Client
         working-directory: Client
@@ -34,8 +32,13 @@ jobs:
         working-directory: Client
         run: npm run build
 
-      # --- Server Build ---
-      - name: Setup Node for Server
+  server-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -44,17 +47,13 @@ jobs:
 
       - name: Install Server dependencies
         working-directory: Server
-        run: npm ci || npm install
+        run: npm ci
 
       - name: Build Server
         working-directory: Server
         run: npm run build
 
-      # --- Docker Build ---
-      - name: Docker Buildx setup
-        uses: docker/setup-buildx-action@v3
+      - name: Lint Server
+        working-directory: Server
+        run: npm run lint --if-present
 
-      - name: Build Docker images
-        run: |
-          docker build -t ijara-hub-client ./Client
-          docker build -t ijara-hub-server ./Server
