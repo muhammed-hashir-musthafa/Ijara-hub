@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   Sidebar,
   SidebarContent,
@@ -15,11 +15,14 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarSeparator,
-} from "@/components/base/ui/sidebar"
-import { Button } from "@/components/base/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/base/ui/avatar"
-import { Badge } from "@/components/base/ui/badge"
-import { useTranslation, type Language } from "@/lib/i18n"
+} from "@/components/base/ui/sidebar";
+import { Button } from "@/components/base/ui/button";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/base/ui/avatar";
+import { Badge } from "@/components/base/ui/badge";
 import {
   LayoutDashboard,
   Users,
@@ -32,77 +35,44 @@ import {
   Database,
   Mail,
   CreditCard,
-} from "lucide-react"
+} from "lucide-react";
 
-interface AdminSidebarProps {
-  lang: Language
-}
-
-export function AdminSidebar({ lang }: AdminSidebarProps) {
-  const pathname = usePathname()
-  const t = useTranslation(lang)
-  const [pendingApprovals] = useState(8) // Mock pending approvals count
+export function AdminSidebar() {
+  const pathname = usePathname();
+  const [pendingApprovals] = useState(8); // Mock pending approvals count
 
   const navigationItems = [
     {
-      title: t.systemOverview,
+      title: "System Overview",
       url: "/admin/dashboard",
       icon: LayoutDashboard,
     },
     {
-      title: t.userManagement,
+      title: "User Management",
       url: "/admin/users",
       icon: Users,
-      badge: "1,247", // Mock user count
+      badge: "1,247",
     },
     {
-      title: t.propertyManagement,
+      title: "Property Management",
       url: "/admin/properties",
       icon: Building2,
       badge: pendingApprovals > 0 ? pendingApprovals.toString() : undefined,
     },
-    {
-      title: t.systemAnalytics,
-      url: "/admin/analytics",
-      icon: BarChart3,
-    },
-    {
-      title: t.reports,
-      url: "/admin/reports",
-      icon: FileText,
-    },
-  ]
+    { title: "System Analytics", url: "/admin/analytics", icon: BarChart3 },
+    { title: "Reports", url: "/admin/reports", icon: FileText },
+  ];
 
   const systemItems = [
-    {
-      title: t.systemSettings,
-      url: "/admin/settings",
-      icon: Settings,
-    },
-    {
-      title: t.auditLogs,
-      url: "/admin/audit",
-      icon: Shield,
-    },
-    {
-      title: "Database",
-      url: "/admin/database",
-      icon: Database,
-    },
-  ]
+    { title: "System Settings", url: "/admin/settings", icon: Settings },
+    { title: "Audit Logs", url: "/admin/audit", icon: Shield },
+    { title: "Database", url: "/admin/database", icon: Database },
+  ];
 
   const configItems = [
-    {
-      title: t.emailSettings,
-      url: "/admin/email",
-      icon: Mail,
-    },
-    {
-      title: t.paymentSettings,
-      url: "/admin/payments",
-      icon: CreditCard,
-    },
-  ]
+    { title: "Email Settings", url: "/admin/email", icon: Mail },
+    { title: "Payment Settings", url: "/admin/payments", icon: CreditCard },
+  ];
 
   return (
     <Sidebar className="border-r border-sidebar-border bg-sidebar">
@@ -112,7 +82,9 @@ export function AdminSidebar({ lang }: AdminSidebarProps) {
             <Shield className="h-5 w-5" />
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-bold text-sidebar-foreground">Ijara Hub</span>
+            <span className="text-sm font-bold text-sidebar-foreground">
+              Ijara Hub
+            </span>
             <span className="text-xs text-muted-foreground">Admin Portal</span>
           </div>
         </div>
@@ -121,19 +93,28 @@ export function AdminSidebar({ lang }: AdminSidebarProps) {
       <SidebarContent>
         {/* Main Navigation */}
         <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/70">Platform Management</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-sidebar-foreground/70">
+            Platform Management
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navigationItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={pathname === item.url} className="w-full justify-start">
+                  <SidebarMenuButton
+                    asChild
+                    isActive={pathname === item.url}
+                    className="w-full justify-start"
+                  >
                     <Link href={item.url} className="flex items-center gap-3">
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
                       {item.badge && (
                         <Badge
                           variant={
-                            item.title === t.propertyManagement && pendingApprovals > 0 ? "destructive" : "secondary"
+                            item.title === "Property Management" &&
+                            pendingApprovals > 0
+                              ? "destructive"
+                              : "secondary"
                           }
                           className="ml-auto text-xs"
                         >
@@ -152,12 +133,18 @@ export function AdminSidebar({ lang }: AdminSidebarProps) {
 
         {/* System Administration */}
         <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/70">System Administration</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-sidebar-foreground/70">
+            System Administration
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {systemItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={pathname === item.url} className="w-full justify-start">
+                  <SidebarMenuButton
+                    asChild
+                    isActive={pathname === item.url}
+                    className="w-full justify-start"
+                  >
                     <Link href={item.url} className="flex items-center gap-3">
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
@@ -173,12 +160,18 @@ export function AdminSidebar({ lang }: AdminSidebarProps) {
 
         {/* Configuration */}
         <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/70">Configuration</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-sidebar-foreground/70">
+            Configuration
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {configItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={pathname === item.url} className="w-full justify-start">
+                  <SidebarMenuButton
+                    asChild
+                    isActive={pathname === item.url}
+                    className="w-full justify-start"
+                  >
                     <Link href={item.url} className="flex items-center gap-3">
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
@@ -203,12 +196,21 @@ export function AdminSidebar({ lang }: AdminSidebarProps) {
         {/* Admin Profile */}
         <div className="flex items-center gap-3 px-2 py-3">
           <Avatar className="h-8 w-8">
-            <AvatarImage src="/placeholder.svg?height=32&width=32" alt="Admin" />
-            <AvatarFallback className="bg-primary text-primary-foreground text-xs">SA</AvatarFallback>
+            <AvatarImage
+              src="/placeholder.svg?height=32&width=32"
+              alt="Admin"
+            />
+            <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+              SA
+            </AvatarFallback>
           </Avatar>
           <div className="flex flex-col flex-1 min-w-0">
-            <span className="text-sm font-medium text-sidebar-foreground truncate">Super Admin</span>
-            <span className="text-xs text-muted-foreground truncate">admin@uaerentals.com</span>
+            <span className="text-sm font-medium text-sidebar-foreground truncate">
+              Super Admin
+            </span>
+            <span className="text-xs text-muted-foreground truncate">
+              admin@uaerentals.com
+            </span>
           </div>
           <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
             <LogOut className="h-4 w-4" />
@@ -216,5 +218,5 @@ export function AdminSidebar({ lang }: AdminSidebarProps) {
         </div>
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }

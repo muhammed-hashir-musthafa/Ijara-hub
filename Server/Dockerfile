@@ -1,7 +1,7 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json* .npmrc* ./
-RUN npm ci || npm install
+RUN npm ci --omit=dev || npm install --omit=dev
 
 FROM node:20-alpine AS builder
 WORKDIR /app
@@ -14,7 +14,5 @@ WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=builder /app/dist ./dist
 COPY package.json ./package.json
-RUN npm pkg set scripts.start="node dist/index.js"
 EXPOSE 5000
-CMD ["npm", "run", "start"]
-
+CMD ["node", "dist/index.js"]
