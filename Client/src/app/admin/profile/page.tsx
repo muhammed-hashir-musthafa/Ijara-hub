@@ -9,76 +9,30 @@ import {
 } from "@/components/base/ui/card";
 import { Badge } from "@/components/base/ui/badge";
 import { Button } from "@/components/base/ui/button";
-import { Input } from "@/components/base/ui/input";
-import { Label } from "@/components/base/ui/label";
-import { Textarea } from "@/components/base/ui/textarea";
 import {
   User,
   Mail,
   Phone,
   MapPin,
-  Globe,
   Calendar,
   Star,
-  Shield,
   Award,
-  Trophy,
   Settings,
-  Camera,
-  Eye,
-  Edit,
-  Save,
-  X,
   ChevronRight,
-  Sparkles,
-  Clock,
   Building,
-  Car,
   Users,
   DollarSign,
   Activity,
-  Target,
-  Bell,
-  Lock,
-  CreditCard,
-  Palette,
-  Languages,
-  MessageSquare,
   HelpCircle,
-  LogOut,
   CheckCircle,
-  AlertTriangle,
-  Smartphone,
-  Laptop,
-  Tablet,
   BarChart3,
-  FileText,
-  Database,
-  UserPlus,
-  Trash2,
-  RefreshCw,
-  Download,
-  Upload,
   Zap,
   Crown,
-  Briefcase,
-  GraduationCap,
-  Heart,
-  Share2,
-  ExternalLink,
-  Plane,
-  Camera as CameraIcon,
-  Coffee,
-  Music,
-  BookOpen,
-  Mountain,
-  Utensils,
-  PieChart,
   TrendingUp,
   ShieldCheck,
   Cpu,
-  Network,
 } from "lucide-react";
+import Image from "next/image";
 
 const AdminProfile = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -145,7 +99,9 @@ const AdminProfile = () => {
         {/* Premium Admin Header */}
         <div className="relative mb-8">
           <div className="h-80 rounded-3xl overflow-hidden shadow-2xl relative group">
-            <img
+            <Image
+              width={80}
+              height={80}
               src={adminData.coverPhoto}
               alt="Cover"
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
@@ -169,7 +125,9 @@ const AdminProfile = () => {
                 <div className="flex items-end space-x-6">
                   <div className="relative">
                     <div className="w-36 h-36 rounded-full border-4 border-white shadow-2xl overflow-hidden">
-                      <img
+                      <Image
+                        width={36}
+                        height={36}
                         src={adminData.avatar}
                         alt={adminData.name}
                         className="w-full h-full object-cover"
