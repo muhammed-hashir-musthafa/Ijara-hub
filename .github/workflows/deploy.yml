@@ -27,3 +27,15 @@ jobs:
         run: |
           docker build -t hashir001/ijarahub:server ./Server
           docker push hashir001/ijarahub:server
+
+      - name: Deploy to AWS EC2 via SSH
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/Ijara-hub
+            git pull origin main
+            docker-compose pull
+            docker-compose up -d
