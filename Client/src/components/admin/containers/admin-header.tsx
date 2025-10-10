@@ -26,7 +26,6 @@ export function AdminHeader({ title = "Admin Dashboard" }: AdminHeaderProps) {
       <div className="flex items-center gap-4 flex-1">
         <h1 className="text-lg font-semibold text-foreground">{title}</h1>
 
-        {/* Search */}
         <div className="relative ml-auto max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -35,13 +34,11 @@ export function AdminHeader({ title = "Admin Dashboard" }: AdminHeaderProps) {
           />
         </div>
 
-        {/* System Status */}
         <Button variant="ghost" size="sm" className="gap-2">
           <Activity className="h-4 w-4 text-accent" />
           <span className="text-sm">System Healthy</span>
         </Button>
 
-        {/* Alerts */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="relative">
@@ -77,7 +74,6 @@ export function AdminHeader({ title = "Admin Dashboard" }: AdminHeaderProps) {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Notifications */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="relative">

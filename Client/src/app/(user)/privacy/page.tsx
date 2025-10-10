@@ -2,7 +2,7 @@ import PrivacyPage from "@/components/renter/containers/PrivacyPolicies/PrivacyP
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy | Ijara Hub Rental Services",
+  title: "Privacy | Ijara Hub Premium Rental Service",
   description: "Read the privacy policy for using Ijara Hub Rental Services.",
   keywords: [
     "privacy",

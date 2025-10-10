@@ -3,7 +3,7 @@ import { Metadata } from "next";
 import React from "react";
 
 export const metadata: Metadata = {
-  title: "Rooms Listing | Ijara Hub Premium Room & Car Rentals",
+  title: "Rooms Listing | Ijara Hub Premium Rental Service",
   description:
     "Explore our premium room rentals at Ijara Hub. Find comfortable and affordable accommodations for your stay. Book your ideal room today!",
   keywords: [

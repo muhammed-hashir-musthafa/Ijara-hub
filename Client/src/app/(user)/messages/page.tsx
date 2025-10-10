@@ -10,17 +10,15 @@ import {
   Phone,
   Video,
   MoreVertical,
-  Paperclip,
   Mic,
   Smile,
   Search,
   ArrowLeft,
   Star,
   MapPin,
-  Calendar,
   Check,
   CheckCheck,
-  Image,
+  Image as ImageIcon,
   FileText,
   Camera,
   Plus,
@@ -29,11 +27,37 @@ import {
   Clock,
   Crown,
   Sparkles,
-  X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
-const mockContacts = [
+type ContactType = "vip" | "concierge" | "support" | "host" | "user";
+
+interface Contact {
+  id: number;
+  name: string;
+  role: string;
+  avatar: string;
+  lastMessage: string;
+  time: string;
+  unread: number;
+  online: boolean;
+  type: ContactType;
+}
+
+type MessageStatus = "sent" | "delivered" | "read";
+
+interface Message {
+  id: number;
+  sender: "host" | "user";
+  message: string;
+  time: string;
+  status: MessageStatus;
+  type: "text" | "image";
+  imageUrl?: string;
+}
+
+const mockContacts: Contact[] = [
   {
     id: 1,
     name: "Sophia Al-Rashid",
@@ -84,7 +108,7 @@ const mockContacts = [
   },
 ];
 
-const mockMessages = [
+const mockMessages: Message[] = [
   {
     id: 1,
     sender: "host",
@@ -146,7 +170,7 @@ const MessagePage = () => {
   const [newMessage, setNewMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [showAttachments, setShowAttachments] = useState(false);
-  const messagesEndRef = useRef(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -155,7 +179,7 @@ const MessagePage = () => {
 
   const handleSendMessage = () => {
     if (newMessage.trim()) {
-      const message = {
+      const message: Message = {
         id: messages.length + 1,
         sender: "user",
         message: newMessage,
@@ -166,14 +190,16 @@ const MessagePage = () => {
         status: "sent",
         type: "text",
       };
-      setMessages([...messages, message]);
+
+      setMessages((prev) => [...prev, message]);
       setNewMessage("");
 
       // Simulate typing indicator
       setIsTyping(true);
       setTimeout(() => {
         setIsTyping(false);
-        const replyMessage = {
+
+        const replyMessage: Message = {
           id: messages.length + 2,
           sender: "host",
           message: "Thank you for your message! I'll get back to you shortly.",
@@ -184,12 +210,13 @@ const MessagePage = () => {
           status: "delivered",
           type: "text",
         };
+
         setMessages((prev) => [...prev, replyMessage]);
       }, 2000);
     }
   };
 
-  const getContactIcon = (type) => {
+  const getContactIcon = (type: ContactType) => {
     switch (type) {
       case "vip":
         return Crown;
@@ -202,10 +229,9 @@ const MessagePage = () => {
     }
   };
 
-  const getStatusIcon = (status) => {
+  const getStatusIcon = (status: MessageStatus) => {
     switch (status) {
       case "delivered":
-        return CheckCheck;
       case "read":
         return CheckCheck;
       case "sent":
@@ -295,11 +321,14 @@ const MessagePage = () => {
                     >
                       <div className="flex items-center space-x-3">
                         <div className="relative">
-                          <img
+                          <Image
                             src={contact.avatar}
                             alt={contact.name}
+                            width={48}
+                            height={48}
                             className="w-12 h-12 rounded-full object-cover shadow-md"
                           />
+
                           {contact.online && (
                             <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
                           )}
@@ -346,11 +375,14 @@ const MessagePage = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div className="relative">
-                      <img
+                      <Image
                         src={selectedContact.avatar}
                         alt={selectedContact.name}
+                        width={40}
+                        height={40}
                         className="w-10 h-10 rounded-full object-cover shadow-md"
                       />
+
                       {selectedContact.online && (
                         <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
                       )}
@@ -411,11 +443,16 @@ const MessagePage = () => {
                     >
                       {message.type === "image" ? (
                         <div className="space-y-2">
-                          <img
-                            src={message.imageUrl}
-                            alt="Shared image"
-                            className="w-full rounded-lg object-cover"
-                          />
+                          {message.imageUrl && (
+                            <Image
+                              src={message.imageUrl}
+                              alt="Shared image"
+                              width={400}
+                              height={300}
+                              className="w-full rounded-lg object-cover"
+                            />
+                          )}
+
                           <p className="text-sm font-medium">
                             {message.message}
                           </p>
@@ -475,7 +512,7 @@ const MessagePage = () => {
                   <div className="flex items-center space-x-2 mb-3 animate-slide-down">
                     {[
                       { icon: Camera, label: "Camera", color: "bg-blue-500" },
-                      { icon: Image, label: "Gallery", color: "bg-green-500" },
+                      { icon: ImageIcon, label: "Gallery", color: "bg-green-500" },
                       {
                         icon: FileText,
                         label: "Document",

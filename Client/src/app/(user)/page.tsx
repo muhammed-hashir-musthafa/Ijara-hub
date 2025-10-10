@@ -2,7 +2,7 @@ import HomePage from "@/components/renter/containers/Home/Home";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Home | Ijara Hub Premium Room & Car Rentals",
+  title: "Home | Ijara Hub Premium Rental Service",
   description:
     "Discover luxury room and car rentals across the UAE. Premium service, unmatched quality.",
   keywords: [
