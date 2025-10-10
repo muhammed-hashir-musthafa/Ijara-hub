@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
+import { IUser, IUserMethods, UserModel } from "../types/user";
 
-const UserSchema = new mongoose.Schema(
+const UserSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
   {
     name: {
       type: String,
@@ -122,10 +123,10 @@ UserSchema.methods.comparePassword = async function (candidatePassword: string):
 
 // Remove password from JSON output
 UserSchema.methods.toJSON = function () {
-  const userObject = this.toObject();
-  delete userObject.password;
-  return userObject;
+  const obj = this.toObject() as Record<string, any>;
+  delete obj.password;
+  return obj;
 };
 
-const User = mongoose.model("User", UserSchema);
+const User = mongoose.model<IUser, UserModel>("User", UserSchema);
 export default User;
