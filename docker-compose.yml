@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   server:
-    image: hashir001/ijarahub-server:latest
+    image: hashir001/ijarahub:server-latest
     container_name: ijara-server
     ports:
       - "5000:5000"
@@ -12,7 +12,7 @@ services:
     restart: always
 
   client:
-    image: hashir001/ijarahub-client:latest
+    image: hashir001/ijarahub:client-latest
     container_name: ijara-client
     ports:
       - "3000:3000"

@@ -19,13 +19,13 @@ jobs:
 
       - name: Build and push Client image
         run: |
-          docker build -t hashir001/ijarahub:client:latest ./Client
-          docker push hashir001/ijarahub:client:latest
+            docker build -t hashir001/ijarahub:client-latest ./Client
+            docker push hashir001/ijarahub:client-latest
 
       - name: Build and push Server image
         run: |
-          docker build -t hashir001/ijarahub:server:latest ./Server
-          docker push hashir001/ijarahub:server:latest
+          docker build -t hashir001/ijarahub:server-latest ./Server
+          docker push hashir001/ijarahub:server-latest
 
   deployaws:
     needs: build-and-push
