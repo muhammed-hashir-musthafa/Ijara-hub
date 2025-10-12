@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 jobs:
-  deploy:
+  build-and-push:
     runs-on: ubuntu-latest
 
     steps:
@@ -28,7 +28,7 @@ jobs:
           docker build -t hashir001/ijarahub:server ./Server
           docker push hashir001/ijarahub:server
 
-  deployaws:
+  deploy:
     needs: build-and-push
     runs-on: self-hosted
     steps:
