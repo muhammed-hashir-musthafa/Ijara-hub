@@ -2,8 +2,7 @@ version: "3.9"
 
 services:
   server:
-    build:
-      context: ./Server
+    image: hashir001/ijarahub-server
     container_name: ijara-server
     ports:
       - "5000:5000"
@@ -13,8 +12,7 @@ services:
     restart: always
 
   client:
-    build:
-      context: ./Client
+    image: hashir001/ijarahub-client
     container_name: ijara-client
     ports:
       - "3000:3000"
