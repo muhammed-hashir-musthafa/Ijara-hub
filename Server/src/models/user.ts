@@ -9,7 +9,7 @@ const UserSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
       required: [true, "Name is required"],
       trim: true,
       minlength: [2, "Name must be at least 2 characters"],
-      maxlength: [50, "Name cannot exceed 50 characters"]
+      maxlength: [50, "Name cannot exceed 50 characters"],
     },
     email: {
       type: String,
@@ -17,7 +17,7 @@ const UserSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
       unique: true,
       lowercase: true,
       trim: true,
-      match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Please enter a valid email"]
+      match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Please enter a valid email"],
     },
     password: {
       type: String,
@@ -25,76 +25,71 @@ const UserSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
       minlength: [6, "Password must be at least 6 characters"],
       match: [
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/,
-        "Password must contain at least one uppercase letter, one lowercase letter, and one number"
-      ]
+        "Password must contain at least one uppercase letter, one lowercase letter, and one number",
+      ],
     },
     gender: {
       type: String,
       required: [true, "Gender is required"],
       enum: {
         values: ["male", "female", "other"],
-        message: "Gender must be male, female, or other"
-      }
+        message: "Gender must be male, female, or other",
+      },
     },
     dateOfBirth: {
       type: Date,
-      required: [true, "Date of birth is required"]
+      required: [true, "Date of birth is required"],
     },
     role: {
       type: String,
       required: true,
       enum: {
         values: ["admin", "customer", "staff"],
-        message: "Role must be admin, customer, or staff"
+        message: "Role must be admin, customer, or staff",
       },
-      default: "customer"
+      default: "customer",
     },
     phone: {
       type: String,
       required: [true, "Phone number is required"],
       trim: true,
-      match: [/^[+]?[1-9][\d\s\-()]{7,15}$/, "Please enter a valid phone number"]
+      match: [
+        /^[+]?[1-9][\d\s\-()]{7,15}$/,
+        "Please enter a valid phone number",
+      ],
     },
     address: {
       street: { type: String, trim: true },
       city: { type: String, trim: true },
       state: { type: String, trim: true },
       zipCode: { type: String, trim: true },
-      country: { type: String, trim: true, default: "UAE" }
+      country: { type: String, trim: true, default: "UAE" },
     },
     profileImage: {
       type: String,
-      default: null
+      default: null,
     },
     isVerified: {
       type: Boolean,
-      default: false
+      default: false,
     },
-    roomBookings: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "RoomBooking"
-    }],
-    carRentals: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "CarRental"
-    }],
     isActive: {
       type: Boolean,
-      default: true
+      default: true,
     },
     isDeleted: {
       type: Boolean,
-      default: false
+      default: false,
     },
     lastLogin: {
       type: Date,
-      default: null
-    }
+      default: null,
+    },
   },
   {
     timestamps: true,
     toJSON: { virtuals: true },
-    toObject: { virtuals: true }
+    toObject: { virtuals: true },
   }
 );
 
@@ -117,7 +112,9 @@ UserSchema.pre("save", async function (next) {
 });
 
 // Method to compare password
-UserSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
+UserSchema.methods.comparePassword = async function (
+  candidatePassword: string
+): Promise<boolean> {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
