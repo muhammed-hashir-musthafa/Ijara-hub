@@ -65,7 +65,7 @@ export function Footer() {
       text: "Dubai, United Arab Emirates",
       color: "text-red-500",
     },
-    { icon: Phone, text: "+971 4 123 4567", color: "text-green-500" },
+    { icon: Phone, text: "+971 0 123 4567", color: "text-green-500" },
     { icon: Mail, text: "info@ijarahub.com", color: "text-blue-500" },
   ];
 
@@ -174,7 +174,7 @@ export function Footer() {
           <div className="flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0">
             <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-6">
               <p className="text-gray-400 text-sm">
-                © 2024 Ijara Hub. All rights reserved.
+                © 2025 Ijara Hub. All rights reserved.
               </p>
               <div className="flex items-center space-x-1 text-xs text-gray-500">
                 <span>Made with</span>
