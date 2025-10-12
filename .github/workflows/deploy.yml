@@ -36,8 +36,8 @@ jobs:
 
       - name: Pull latest images
         run: |
-          docker pull hashir001/ijarahub:server
-          docker pull hashir001/ijarahub:client
+          docker pull hashir001/ijarahub:server-latest
+          docker pull hashir001/ijarahub:client-latest
 
       - name: Stop old containers
         run: |
