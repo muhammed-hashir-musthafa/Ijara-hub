@@ -66,7 +66,7 @@ export function Footer() {
       color: "text-red-500",
     },
     { icon: Phone, text: "+971 4 123 4567", color: "text-green-500" },
-    { icon: Mail, text: "info@uaerentals.com", color: "text-blue-500" },
+    { icon: Mail, text: "info@ijarahub.com", color: "text-blue-500" },
   ];
 
   return (
