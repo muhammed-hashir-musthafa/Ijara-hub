@@ -7,7 +7,6 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -28,10 +27,13 @@ jobs:
           docker build -t hashir001/ijarahub:server ./Server
           docker push hashir001/ijarahub:server
 
-  deploy:
+  deployaws:
     needs: build-and-push
     runs-on: self-hosted
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Pull latest images
         run: |
           docker pull hashir001/ijarahub:server
@@ -43,8 +45,8 @@ jobs:
           docker rm -f ijara-client || true
 
       - name: Run containers using docker-compose
-        run: |
-          docker-compose -f ./docker-compose.yml up -d --remove-orphans
+        working-directory: ${{ github.workspace }}
+        run: docker-compose up -d --remove-orphans
 
       # - name: Deploy to AWS EC2 via SSH
       #   uses: appleboy/ssh-action@v0.1.10
