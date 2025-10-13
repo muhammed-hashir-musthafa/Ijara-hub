@@ -19,8 +19,8 @@ jobs:
 
       - name: Build and push Client image
         run: |
-            docker build -t hashir001/ijarahub:client-latest ./Client
-            docker push hashir001/ijarahub:client-latest
+          docker build -t hashir001/ijarahub:client-latest ./Client
+          docker push hashir001/ijarahub:client-latest
 
       - name: Build and push Server image
         run: |
@@ -39,14 +39,14 @@ jobs:
           docker pull hashir001/ijarahub:server-latest
           docker pull hashir001/ijarahub:client-latest
 
-      - name: Stop old containers
+      - name: Deploy updated containers
         run: |
-          docker rm -f ijara-server || true
-          docker rm -f ijara-client || true
-
-      - name: Run containers using docker-compose
-        working-directory: ${{ github.workspace }}
-        run: docker-compose up -d --remove-orphans
+          echo "Starting updated containers..."
+          docker compose up -d --remove-orphans
+          echo "Waiting for containers to stabilize..."
+          sleep 10
+          echo "Removing stopped containers..."
+          docker container prune -f
 
       # - name: Deploy to AWS EC2 via SSH
       #   uses: appleboy/ssh-action@v0.1.10
