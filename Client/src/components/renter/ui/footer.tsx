@@ -65,7 +65,7 @@ export function Footer() {
       text: "Dubai, United Arab Emirates",
       color: "text-red-500",
     },
-    { icon: Phone, text: "+971 0 123 4567", color: "text-green-500" },
+    { icon: Phone, text: "+971 7 654 3210", color: "text-green-500" },
     { icon: Mail, text: "info@ijarahub.com", color: "text-blue-500" },
   ];
 
