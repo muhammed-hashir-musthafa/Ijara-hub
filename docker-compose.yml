@@ -10,6 +10,12 @@ services:
       NODE_ENV: production
       PORT: 5000
     restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
   client:
     image: hashir001/ijarahub:client-latest
@@ -19,5 +25,12 @@ services:
     environment:
       NODE_ENV: production
     depends_on:
-      - server
+      server:
+        condition: service_healthy
     restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

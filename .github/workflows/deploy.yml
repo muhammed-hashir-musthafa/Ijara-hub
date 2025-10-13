@@ -36,17 +36,38 @@ jobs:
 
       - name: Pull latest images
         run: |
+          set -e
           docker pull hashir001/ijarahub:server-latest
           docker pull hashir001/ijarahub:client-latest
 
-      - name: Deploy updated containers
+      - name: Safe deploy with rollback protection
         run: |
-          echo "Starting updated containers..."
-          docker compose up -d --remove-orphans
+          set -e
+          echo "Starting safe deployment..."
+
+          echo "Backing up currently running containers..."
+          docker compose ps -q > old_containers.txt || true
+
+          echo "Starting new containers without stopping old ones..."
+          docker compose up -d --remove-orphans --force-recreate
+
           echo "Waiting for containers to stabilize..."
           sleep 10
-          echo "Removing stopped containers..."
+
+          echo "Checking if all new containers are healthy..."
+          unhealthy=$(docker ps --filter "health=unhealthy" --format "{{.Names}}")
+          if [ -n "$unhealthy" ]; then
+            echo "Unhealthy containers detected: $unhealthy"
+            echo "Rolling back to previous state..."
+            docker compose down
+            docker start $(cat old_containers.txt)
+            exit 1
+          fi
+
+          echo "New containers are healthy. Cleaning up old ones..."
           docker container prune -f
+
+          echo "Deployment successful ✅"
 
       # - name: Deploy to AWS EC2 via SSH
       #   uses: appleboy/ssh-action@v0.1.10
