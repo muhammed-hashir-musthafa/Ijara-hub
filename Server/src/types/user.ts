@@ -1,24 +1,36 @@
 import mongoose, { Model } from "mongoose";
 
- export interface IUser {
-  name: string;
+export interface IUser {
+  customId: string; // Custom unique ID field
+  fname: string;
+  lname: string;
   email: string;
   password: string;
   gender: "male" | "female" | "other";
-  dateOfBirth: Date;
-  role: "admin" | "customer" | "staff";
+  age: number;
+  role: "admin" | "owner" | "renter";
   phone: string;
   address?: {
     street?: string;
     city?: string;
-    state?: string;
+    emirate?: string;
     zipCode?: string;
-    country?: string;
+  };
+  companyDetails?: {
+    companyName: string;
+    companyAddress: {
+      place: string;
+      pincode: number;
+    };
+    companyEmail: string;
+    isCompanyEmailVerified: boolean;
+    isCompanyVerified: boolean;
+    companyPhone: number;
+    since: number;
+    bio: string;
   };
   profileImage?: string | null;
   isVerified: boolean;
-  roomBookings?: mongoose.Types.ObjectId[];
-  carRentals?: mongoose.Types.ObjectId[];
   isActive: boolean;
   isDeleted: boolean;
   lastLogin?: Date | null;

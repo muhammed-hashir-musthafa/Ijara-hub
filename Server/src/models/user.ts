@@ -2,14 +2,38 @@ import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import { IUser, IUserMethods, UserModel } from "../types/user";
 
+const companyAddressSchema = new mongoose.Schema({
+  place: { type: String },
+  pincode: { type: Number }, // pincode as Number
+});
+
+const companyDetailsSchema = new mongoose.Schema({
+  companyName: { type: String },
+  companyAddress: companyAddressSchema, // Using the updated company address schema
+  companyEmail: { type: String },
+  isCompanyEmailVerified: { type: Boolean, default: false }, // New field for company email verification
+  isCompanyVerified: { type: Boolean, default: false }, // For verifying company and giving badge
+  companyPhone: { type: String },
+  since: { type: Number, default: 2025 }, // Experience in years
+  bio: { type: String },
+});
+
 const UserSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
   {
-    name: {
+    customId: { type: String }, // Custom unique ID field
+    fname: {
       type: String,
-      required: [true, "Name is required"],
+      required: [true, "First Name is required"],
       trim: true,
-      minlength: [2, "Name must be at least 2 characters"],
-      maxlength: [50, "Name cannot exceed 50 characters"],
+      minlength: [2, "First Name must be at least 2 characters"],
+      maxlength: [50, "First Name cannot exceed 50 characters"],
+    },
+    lname: {
+      type: String,
+      required: [true, "Last Name is required"],
+      trim: true,
+      minlength: [2, "Last Name must be at least 2 characters"],
+      maxlength: [50, "Last Name cannot exceed 50 characters"],
     },
     email: {
       type: String,
@@ -36,18 +60,17 @@ const UserSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
         message: "Gender must be male, female, or other",
       },
     },
-    dateOfBirth: {
-      type: Date,
-      required: [true, "Date of birth is required"],
+    age: {
+      type: Number,
     },
     role: {
       type: String,
       required: true,
       enum: {
-        values: ["admin", "customer", "staff"],
-        message: "Role must be admin, customer, or staff",
+        values: ["admin", "owner", "renter"],
+        message: "Role must be admin, owner, or renter",
       },
-      default: "customer",
+      default: "renter",
     },
     phone: {
       type: String,
@@ -61,14 +84,14 @@ const UserSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
     address: {
       street: { type: String, trim: true },
       city: { type: String, trim: true },
-      state: { type: String, trim: true },
+      emirate: { type: String, trim: true },
       zipCode: { type: String, trim: true },
-      country: { type: String, trim: true, default: "UAE" },
     },
     profileImage: {
       type: String,
       default: null,
     },
+    companyDetails: companyDetailsSchema,
     isVerified: {
       type: Boolean,
       default: false,
@@ -97,6 +120,21 @@ const UserSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
 UserSchema.index({ email: 1 }, { unique: true });
 UserSchema.index({ role: 1 });
 UserSchema.index({ createdAt: -1 });
+
+UserSchema.pre("validate", function (next) {
+  if (this.role !== "renter" && !this.companyDetails) {
+    this.invalidate(
+      "companyDetails",
+      "Company details are required for non-renter roles"
+    );
+  }
+
+  if (this.role !== "renter" && !this.companyDetails?.companyName) {
+    this.invalidate("companyDetails.companyName", "Company name is required");
+  }
+
+  next();
+});
 
 // Pre-save hook for password hashing
 UserSchema.pre("save", async function (next) {
