@@ -1,8 +1,9 @@
 import mongoose from "mongoose";
+import config from "./config";
 
 const connectDB = async (): Promise<void> => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI as string || 'mongodb://localhost:27017/IjaraHub');
+    await mongoose.connect(config.mongodb.uri);
     console.log('MongoDB connected successfully');
   } catch (error) {
     console.error('MongoDB connection error:', error);
