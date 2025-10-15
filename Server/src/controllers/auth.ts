@@ -1,83 +1,149 @@
 import { Request, Response } from "express";
-import jwt from "jsonwebtoken";
-import User from "../models/user.js";
+import { generateToken } from "../utils/jwt";
+import User from "../models/user";
 
-export const registerUser = async (req: Request, res: Response) => {
-  try {
-    const { name, email, password, phone, gender, dateOfBirth } = req.body;
-
-    if (!name || !email || !password || !phone) {
-      return res.status(400).json({
-        success: false,
-        message: "Name, email, password, and phone are required"
-      });
-    }
-
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: "User with this email already exists"
-      });
-    }
-
-    const user = new User({ name, email, password, phone, gender, dateOfBirth });
-    await user.save();
-
-    const token = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_SECRET!,
-      { expiresIn: "7d" }
-    );
-
-    res.status(201).json({
-      success: true,
-      message: "User registered successfully",
-      data: { user, token }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Server error during registration"
-    });
-  }
-};
-
-export const loginUser = async (req: Request, res: Response) => {
+// Admin Login
+export const adminLogin = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email, role: "admin" });
     if (!user) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid email or password"
-      });
+      return res.status(401).json({ error: "Invalid admin credentials" });
     }
 
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid email or password"
-      });
+      return res.status(401).json({ error: "Invalid admin credentials" });
     }
 
-    const token = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_SECRET!,
-      { expiresIn: "7d" }
-    );
+    const token = generateToken({
+      id: user._id.toString(),
+      email: user.email,
+      role: user.role
+    });
 
-    res.status(200).json({
-      success: true,
-      message: "Login successful",
-      data: { user, token }
-    });
+    res.json({ message: "Admin login successful", token, user });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Server error during login"
+    res.status(500).json({ error: "Admin login failed" });
+  }
+};
+
+// Owner/Renter Login with role selection
+export const login = async (req: Request, res: Response) => {
+  try {
+    const { email, password, role } = req.body;
+
+    if (!role || !["owner", "renter"].includes(role)) {
+      return res.status(400).json({ error: "Valid role required" });
+    }
+
+    const user = await User.findOne({ email, role });
+    if (!user) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    const isPasswordValid = await user.comparePassword(password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    user.lastLogin = new Date();
+    await user.save();
+
+    const token = generateToken({
+      id: user._id.toString(),
+      email: user.email,
+      role: user.role
     });
+
+    res.json({ message: "Login successful", token, user });
+  } catch (error) {
+    res.status(500).json({ error: "Login failed" });
+  }
+};
+
+// Owner Signup
+export const ownerSignup = async (req: Request, res: Response) => {
+  try {
+    const { fname, lname, email, password, phone, gender, companyDetails } = req.body;
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: "Email already exists" });
+    }
+
+    const user = new User({
+      fname,
+      lname,
+      email,
+      password,
+      phone,
+      gender,
+      role: "owner",
+      companyDetails
+    });
+
+    await user.save();
+
+    const token = generateToken({
+      id: user._id.toString(),
+      email: user.email,
+      role: user.role
+    });
+
+    res.status(201).json({ message: "Owner registered successfully", token, user });
+  } catch (error) {
+    res.status(500).json({ error: "Owner registration failed" });
+  }
+};
+
+// Renter Signup
+export const renterSignup = async (req: Request, res: Response) => {
+  try {
+    const { fname, lname, email, password, phone, gender, age, address } = req.body;
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: "Email already exists" });
+    }
+
+    const user = new User({
+      fname,
+      lname,
+      email,
+      password,
+      phone,
+      gender,
+      age,
+      address,
+      role: "renter"
+    });
+
+    await user.save();
+
+    const token = generateToken({
+      id: user._id.toString(),
+      email: user.email,
+      role: user.role
+    });
+
+    res.status(201).json({ message: "Renter registered successfully", token, user });
+  } catch (error) {
+    res.status(500).json({ error: "Renter registration failed" });
+  }
+};
+
+export const logout = async (req: Request, res: Response) => {
+  res.json({ message: "Logout successful" });
+};
+
+export const getProfile = async (req: any, res: Response) => {
+  try {
+    const user = await User.findById(req.user?.id).select("-password");
+    if (!user) return res.status(404).json({ error: "User not found" });
+    res.json({ user });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch profile" });
   }
 };
