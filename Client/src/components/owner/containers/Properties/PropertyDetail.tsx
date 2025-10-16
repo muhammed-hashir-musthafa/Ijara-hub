@@ -13,7 +13,6 @@ import { Badge } from "@/components/base/ui/badge";
 import { Separator } from "@/components/base/ui/separator";
 import {
   ArrowLeft,
-  Edit,
   Calendar,
   Star,
   MapPin,
@@ -34,14 +33,15 @@ import {
   Camera,
 } from "lucide-react";
 import Image from "next/image";
-import { PropertyStatus } from "@/types/owner";
+import { PropertyStatus, Property, PropertyCategory } from "@/types/owner";
+import EditPropertyModal from "./EditPropertyModal";
 
 // Mock property data
-const mockProperty = {
+const mockProperty: Property = {
   id: "1",
   title: "Luxury Suite - Dubai Marina",
   type: "room" as const,
-  category: "luxury",
+  category: "luxury" as PropertyCategory,
   location: "Dubai Marina",
   price: 850,
   currency: "AED",
@@ -85,8 +85,33 @@ const mockProperty = {
 export default function PropertyDetailsPage() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const [property, setProperty] = useState<Property>(mockProperty);
 
-  const property = mockProperty;
+  const handlePropertyUpdate = (updatedProperty: Property) => {
+    setProperty(updatedProperty);
+  };
+
+  const handleShare = async () => {
+    const shareUrl = `${window.location.origin}/rooms/${property.id}`;
+    const shareData = {
+      title: property.title,
+      text: `Check out this ${property.type} in ${property.location} - ${
+        property.currency
+      } ${property.price}/${property.type === "room" ? "night" : "day"}`,
+      url: shareUrl,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        alert("Link copied to clipboard!");
+      }
+    } catch (error) {
+      console.error("Error sharing:", error);
+    }
+  };
 
   const amenityIcons = {
     wifi: Wifi,
@@ -137,21 +162,16 @@ export default function PropertyDetailsPage() {
             <Button
               variant="outline"
               size="sm"
+              onClick={handleShare}
               className="border-2 hover:border-amber-300 hover:bg-amber-50 transition-all duration-300 group"
             >
               <Share2 className="h-4 w-4 mr-2 group-hover:rotate-12 transition-transform" />
               Share
             </Button>
-            <Button
-              asChild
-              size="sm"
-              className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 group"
-            >
-              <Link href={`/owner/properties/${property.id}/edit`}>
-                <Edit className="h-4 w-4 mr-2 group-hover:rotate-12 transition-transform" />
-                Edit Property
-              </Link>
-            </Button>
+            <EditPropertyModal
+              property={property}
+              onSave={handlePropertyUpdate}
+            />
           </div>
         </div>
 
@@ -452,7 +472,7 @@ export default function PropertyDetailsPage() {
                       Last Updated
                     </span>
                     <span className="font-bold text-gray-900">
-                      {new Date(property.lastUpdated).toLocaleDateString()}
+                      {property.lastUpdated ? new Date(property.lastUpdated).toLocaleDateString() : 'N/A'}
                     </span>
                   </div>
                 </CardContent>
