@@ -12,6 +12,8 @@ export interface SignupFormValues {
   lastName: string;
   email: string;
   phoneNumber: string;
+  gender: "male" | "female" | "other";
+  age: string;
   password: string;
   confirmPassword: string;
   agreeToTerms: boolean;
@@ -22,9 +24,16 @@ export interface OwnerSignupFormValues {
   lastName: string;
   email: string;
   phoneNumber: string;
+  gender: "male" | "female" | "other";
+  age: string;
   businessName: string;
+  businessEmail: string;
+  businessPhone: string;
+  businessAddress: string;
+  businessPincode: string;
   businessType: "individual" | "company";
-  propertyCount: string;
+  experienceYears: string;
+  bio: string;
   password: string;
   confirmPassword: string;
   agreeToTerms: boolean;
