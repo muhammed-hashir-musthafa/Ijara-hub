@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
 import { Button } from "@/components/base/ui/button";
 import { Input } from "@/components/base/ui/input";
 import { Label } from "@/components/base/ui/label";
@@ -33,7 +32,6 @@ import {
   Tv,
   AirVent,
   Users,
-  MapPin,
   DollarSign,
   Sparkles,
   Camera,
@@ -50,6 +48,7 @@ import Image from "next/image";
 import { Formik, Form, Field, ErrorMessage, FormikHelpers } from "formik";
 import * as Yup from "yup";
 import { CarForm, PropertyForm, RoomForm } from "@/types/owner";
+import { useRouter } from "next/navigation";
 
 // Type guards
 function isRoomForm(form: PropertyForm): form is RoomForm {
@@ -69,11 +68,25 @@ const roomValidationSchema = Yup.object({
     .positive("Price must be positive")
     .min(1, "Price must be at least 1")
     .typeError("Must be Number"),
-  location: Yup.string().required("Location is required"),
   category: Yup.string().required("Category is required"),
+  roomNumber: Yup.string().required("Room number is required"),
+  type: Yup.string().required("Room type is required"),
   bedrooms: Yup.string().required("Bedrooms is required"),
   bathrooms: Yup.string().required("Bathrooms is required"),
-  area: Yup.number().positive("Area must be positive").optional(),
+  area: Yup.number()
+    .positive("Area must be positive")
+    .optional()
+    .typeError("Must be Number"),
+  capacity: Yup.number()
+    .required("Capacity is required")
+    .min(1, "Capacity must be at least 1")
+    .typeError("Must be Number"),
+  floor: Yup.number()
+    .required("Floor is required")
+    .min(1, "Floor must be at least 1")
+    .typeError("Must be Number"),
+  place: Yup.string().optional(),
+  pincode: Yup.number().optional().typeError("Must be Number"),
   images: Yup.array().min(1, "At least one image is required"),
   amenities: Yup.array().of(Yup.string()),
 });
@@ -86,16 +99,25 @@ const carValidationSchema = Yup.object({
     .positive("Price must be positive")
     .min(1, "Price must be at least 1")
     .typeError("Must be Number"),
-  location: Yup.string().required("Location is required"),
   category: Yup.string().required("Category is required"),
   brand: Yup.string().required("Brand is required"),
   model: Yup.string().required("Model is required"),
   year: Yup.number()
     .required("Year is required")
     .min(1900, "Year must be after 1900")
-    .max(new Date().getFullYear() + 1, "Year cannot be in the future"),
+    .max(new Date().getFullYear() + 1, "Year cannot be in the future")
+    .typeError("Must be Number"),
+  licensePlate: Yup.string().required("License plate is required"),
   fuelType: Yup.string().required("Fuel type is required"),
   transmission: Yup.string().required("Transmission is required"),
+  seatingCapacity: Yup.number()
+    .required("Seating capacity is required")
+    .min(2, "Must be at least 2")
+    .max(8, "Cannot exceed 8")
+    .typeError("Must be Number"),
+  color: Yup.string().required("Color is required"),
+  place: Yup.string().optional(),
+  pincode: Yup.number().optional().typeError("Must be Number"),
   images: Yup.array().min(1, "At least one image is required"),
   amenities: Yup.array().of(Yup.string()),
 });
@@ -105,11 +127,16 @@ const initialRoomValues: RoomForm = {
   title: "",
   description: "",
   price: "",
-  location: "",
   category: "",
+  roomNumber: "",
+  type: "",
   bedrooms: "",
   bathrooms: "",
   area: "",
+  capacity: "",
+  floor: "",
+  place: "",
+  pincode: "",
   images: [],
   amenities: [],
 };
@@ -118,13 +145,17 @@ const initialCarValues: CarForm = {
   title: "",
   description: "",
   price: "",
-  location: "",
   category: "",
   brand: "",
   model: "",
   year: "",
+  licensePlate: "",
   fuelType: "",
   transmission: "",
+  seatingCapacity: "",
+  color: "",
+  place: "",
+  pincode: "",
   images: [],
   amenities: [],
 };
@@ -133,7 +164,7 @@ export default function AddPropertyPage() {
   const [step, setStep] = useState(1);
   const [propertyType, setPropertyType] = useState<"room" | "car" | null>(null);
   const [draggedOver, setDraggedOver] = useState(false);
-
+  const router = useRouter();
   const handleTypeSelect = (type: "room" | "car") => {
     setPropertyType(type);
     setStep(2);
@@ -201,16 +232,6 @@ export default function AddPropertyPage() {
     { value: "sports", label: "Sports Car", icon: "🏎️" },
   ];
 
-  const locations = [
-    { value: "dubai-marina", label: "Dubai Marina", icon: "🏖️" },
-    { value: "downtown-dubai", label: "Downtown Dubai", icon: "🏙️" },
-    { value: "business-bay", label: "Business Bay", icon: "🏢" },
-    { value: "jumeirah", label: "Jumeirah", icon: "🌊" },
-    { value: "deira", label: "Deira", icon: "🏛️" },
-    { value: "abu-dhabi", label: "Abu Dhabi", icon: "🏰" },
-    { value: "sharjah", label: "Sharjah", icon: "🕌" },
-  ];
-
   const roomAmenities = [
     { id: "wifi", label: "WiFi", icon: Wifi },
     { id: "coffee", label: "Coffee Machine", icon: Coffee },
@@ -256,13 +277,13 @@ export default function AddPropertyPage() {
           <div className="max-w-4xl mx-auto">
             {/* Header */}
             <div className="mb-12 animate-fade-in-up">
-              <Link
-                href="/owner/dashboard"
+              <button
+                onClick={() => router.back()}
                 className="inline-flex items-center text-gray-600 hover:text-amber-600 transition-colors duration-300 group mb-6"
               >
                 <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-                <span className="font-medium">Back to Dashboard</span>
-              </Link>
+                <span className="font-medium">Back </span>
+              </button>
 
               <div className="text-center">
                 <div className="flex items-center justify-center mb-6">
@@ -480,13 +501,13 @@ export default function AddPropertyPage() {
           {/* Header */}
           <div className="mb-8 animate-fade-in-up">
             <div className="flex items-center justify-between mb-6 flex-col sm:flex-row gap-4">
-              <Link
-                href="/owner"
+              <button
+                onClick={() => router.back()}
                 className="inline-flex items-center text-gray-600 hover:text-amber-600 transition-colors duration-300 group w-full sm:w-auto justify-center sm:justify-start"
               >
                 <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-                <span className="font-medium">Back to Dashboard</span>
-              </Link>
+                <span className="font-medium">Back </span>
+              </button>
               <Button
                 variant="outline"
                 onClick={() => setStep(1)}
@@ -682,54 +703,6 @@ export default function AddPropertyPage() {
                           )}
                         </ErrorMessage>
                       </div>
-
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor="location"
-                          className="text-sm font-medium text-gray-700"
-                        >
-                          <div className="flex items-center">
-                            <MapPin className="h-4 w-4 mr-1 text-amber-500" />
-                            Location *
-                          </div>
-                        </Label>
-                        <Select
-                          value={values.location}
-                          onValueChange={(value: string) =>
-                            setFieldValue("location", value)
-                          }
-                        >
-                          <SelectTrigger
-                            className={`border-gray-200 focus:border-amber-300 ${getFieldError(
-                              "location",
-                              errors,
-                              touched
-                            )}`}
-                          >
-                            <SelectValue placeholder="Select location" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {locations.map((location) => (
-                              <SelectItem
-                                key={location.value}
-                                value={location.value}
-                              >
-                                <div className="flex items-center">
-                                  <span className="mr-2">{location.icon}</span>
-                                  {location.label}
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <ErrorMessage name="location">
-                          {(msg: string) => (
-                            <div className="text-red-500 text-sm mt-1">
-                              {msg}
-                            </div>
-                          )}
-                        </ErrorMessage>
-                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -743,7 +716,77 @@ export default function AddPropertyPage() {
                         Room Details
                       </CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label
+                            htmlFor="roomNumber"
+                            className="text-sm font-medium text-gray-700"
+                          >
+                            Room Number *
+                          </Label>
+                          <Field
+                            as={Input}
+                            id="roomNumber"
+                            name="roomNumber"
+                            placeholder="A101"
+                            className={`border-gray-200 focus:border-amber-300 focus:ring-amber-200 transition-all duration-300 ${getFieldError(
+                              "roomNumber",
+                              errors,
+                              touched
+                            )}`}
+                          />
+                          <ErrorMessage name="roomNumber">
+                            {(msg: string) => (
+                              <div className="text-red-500 text-sm mt-1">
+                                {msg}
+                              </div>
+                            )}
+                          </ErrorMessage>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label
+                            htmlFor="type"
+                            className="text-sm font-medium text-gray-700"
+                          >
+                            Room Type *
+                          </Label>
+                          <Select
+                            value={values.type}
+                            onValueChange={(value: string) =>
+                              setFieldValue("type", value)
+                            }
+                          >
+                            <SelectTrigger
+                              className={`border-gray-200 focus:border-amber-300 ${getFieldError(
+                                "type",
+                                errors,
+                                touched
+                              )}`}
+                            >
+                              <SelectValue placeholder="Select room type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="single">Single</SelectItem>
+                              <SelectItem value="double">Double</SelectItem>
+                              <SelectItem value="suite">Suite</SelectItem>
+                              <SelectItem value="deluxe">Deluxe</SelectItem>
+                              <SelectItem value="presidential">
+                                Presidential
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <ErrorMessage name="type">
+                            {(msg: string) => (
+                              <div className="text-red-500 text-sm mt-1">
+                                {msg}
+                              </div>
+                            )}
+                          </ErrorMessage>
+                        </div>
+                      </div>
+
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="space-y-2">
                           <Label
@@ -833,7 +876,7 @@ export default function AddPropertyPage() {
                             as={Input}
                             id="area"
                             name="area"
-                            type="number"
+                            type="text"
                             placeholder="1200"
                             className="border-gray-200 focus:border-amber-300 focus:ring-amber-200 transition-all duration-300"
                           />
@@ -844,6 +887,102 @@ export default function AddPropertyPage() {
                               </div>
                             )}
                           </ErrorMessage>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="space-y-2">
+                          <Label
+                            htmlFor="capacity"
+                            className="text-sm font-medium text-gray-700"
+                          >
+                            <div className="flex items-center">
+                              <Users className="h-4 w-4 mr-1 text-amber-500" />
+                              Guest Capacity *
+                            </div>
+                          </Label>
+                          <Field
+                            as={Input}
+                            id="capacity"
+                            name="capacity"
+                            type="text"
+                            placeholder="4"
+                            className={`border-gray-200 focus:border-amber-300 focus:ring-amber-200 transition-all duration-300 ${getFieldError(
+                              "capacity",
+                              errors,
+                              touched
+                            )}`}
+                          />
+                          <ErrorMessage name="capacity">
+                            {(msg: string) => (
+                              <div className="text-red-500 text-sm mt-1">
+                                {msg}
+                              </div>
+                            )}
+                          </ErrorMessage>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label
+                            htmlFor="floor"
+                            className="text-sm font-medium text-gray-700"
+                          >
+                            Floor Number *
+                          </Label>
+                          <Field
+                            as={Input}
+                            id="floor"
+                            name="floor"
+                            type="text"
+                            placeholder="5"
+                            className={`border-gray-200 focus:border-amber-300 focus:ring-amber-200 transition-all duration-300 ${getFieldError(
+                              "floor",
+                              errors,
+                              touched
+                            )}`}
+                          />
+                          <ErrorMessage name="floor">
+                            {(msg: string) => (
+                              <div className="text-red-500 text-sm mt-1">
+                                {msg}
+                              </div>
+                            )}
+                          </ErrorMessage>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label
+                            htmlFor="place"
+                            className="text-sm font-medium text-gray-700"
+                          >
+                            Specific Address
+                          </Label>
+                          <Field
+                            as={Input}
+                            id="place"
+                            name="place"
+                            placeholder="Building name, street address"
+                            className="border-gray-200 focus:border-amber-300 focus:ring-amber-200 transition-all duration-300"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label
+                            htmlFor="pincode"
+                            className="text-sm font-medium text-gray-700"
+                          >
+                            Pincode
+                          </Label>
+                          <Field
+                            as={Input}
+                            id="pincode"
+                            name="pincode"
+                            type="text"
+                            placeholder="12345"
+                            className="border-gray-200 focus:border-amber-300 focus:ring-amber-200 transition-all duration-300"
+                          />
                         </div>
                       </div>
                     </CardContent>
@@ -858,7 +997,7 @@ export default function AddPropertyPage() {
                         Vehicle Details
                       </CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                           <Label
@@ -913,7 +1052,9 @@ export default function AddPropertyPage() {
                             )}
                           </ErrorMessage>
                         </div>
+                      </div>
 
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                           <Label
                             htmlFor="year"
@@ -925,7 +1066,7 @@ export default function AddPropertyPage() {
                             as={Input}
                             id="year"
                             name="year"
-                            type="number"
+                            type="text"
                             placeholder="2023"
                             className={`border-gray-200 focus:border-amber-300 focus:ring-amber-200 transition-all duration-300 ${getFieldError(
                               "year",
@@ -934,6 +1075,73 @@ export default function AddPropertyPage() {
                             )}`}
                           />
                           <ErrorMessage name="year">
+                            {(msg: string) => (
+                              <div className="text-red-500 text-sm mt-1">
+                                {msg}
+                              </div>
+                            )}
+                          </ErrorMessage>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label
+                            htmlFor="licensePlate"
+                            className="text-sm font-medium text-gray-700"
+                          >
+                            License Plate *
+                          </Label>
+                          <Field
+                            as={Input}
+                            id="licensePlate"
+                            name="licensePlate"
+                            placeholder="ABC-123"
+                            className={`border-gray-200 focus:border-amber-300 focus:ring-amber-200 transition-all duration-300 ${getFieldError(
+                              "licensePlate",
+                              errors,
+                              touched
+                            )}`}
+                          />
+                          <ErrorMessage name="licensePlate">
+                            {(msg: string) => (
+                              <div className="text-red-500 text-sm mt-1">
+                                {msg}
+                              </div>
+                            )}
+                          </ErrorMessage>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label
+                            htmlFor="fuelType"
+                            className="text-sm font-medium text-gray-700"
+                          >
+                            Fuel Type *
+                          </Label>
+                          <Select
+                            value={values.fuelType}
+                            onValueChange={(value: string) =>
+                              setFieldValue("fuelType", value)
+                            }
+                          >
+                            <SelectTrigger
+                              className={`border-gray-200 focus:border-amber-300 ${getFieldError(
+                                "fuelType",
+                                errors,
+                                touched
+                              )}`}
+                            >
+                              <SelectValue placeholder="Select fuel type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="petrol">Petrol</SelectItem>
+                              <SelectItem value="diesel">Diesel</SelectItem>
+                              <SelectItem value="hybrid">Hybrid</SelectItem>
+                              <SelectItem value="electric">Electric</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <ErrorMessage name="fuelType">
                             {(msg: string) => (
                               <div className="text-red-500 text-sm mt-1">
                                 {msg}
@@ -962,13 +1170,14 @@ export default function AddPropertyPage() {
                                 touched
                               )}`}
                             >
-                              <SelectValue placeholder="Select" />
+                              <SelectValue placeholder="Select transmission" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="automatic">
                                 Automatic
                               </SelectItem>
                               <SelectItem value="manual">Manual</SelectItem>
+                              <SelectItem value="cvt">CVT</SelectItem>
                             </SelectContent>
                           </Select>
                           <ErrorMessage name="transmission">
@@ -978,6 +1187,101 @@ export default function AddPropertyPage() {
                               </div>
                             )}
                           </ErrorMessage>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label
+                            htmlFor="seatingCapacity"
+                            className="text-sm font-medium text-gray-700"
+                          >
+                            <div className="flex items-center">
+                              <Users className="h-4 w-4 mr-1 text-amber-500" />
+                              Seating Capacity *
+                            </div>
+                          </Label>
+                          <Field
+                            as={Input}
+                            id="seatingCapacity"
+                            name="seatingCapacity"
+                            type="text"
+                            placeholder="5"
+                            className={`border-gray-200 focus:border-amber-300 focus:ring-amber-200 transition-all duration-300 ${getFieldError(
+                              "seatingCapacity",
+                              errors,
+                              touched
+                            )}`}
+                          />
+                          <ErrorMessage name="seatingCapacity">
+                            {(msg: string) => (
+                              <div className="text-red-500 text-sm mt-1">
+                                {msg}
+                              </div>
+                            )}
+                          </ErrorMessage>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label
+                            htmlFor="color"
+                            className="text-sm font-medium text-gray-700"
+                          >
+                            Color *
+                          </Label>
+                          <Field
+                            as={Input}
+                            id="color"
+                            name="color"
+                            placeholder="Black"
+                            className={`border-gray-200 focus:border-amber-300 focus:ring-amber-200 transition-all duration-300 ${getFieldError(
+                              "color",
+                              errors,
+                              touched
+                            )}`}
+                          />
+                          <ErrorMessage name="color">
+                            {(msg: string) => (
+                              <div className="text-red-500 text-sm mt-1">
+                                {msg}
+                              </div>
+                            )}
+                          </ErrorMessage>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label
+                            htmlFor="place"
+                            className="text-sm font-medium text-gray-700"
+                          >
+                            Specific Address
+                          </Label>
+                          <Field
+                            as={Input}
+                            id="place"
+                            name="place"
+                            placeholder="Parking location, building name"
+                            className="border-gray-200 focus:border-amber-300 focus:ring-amber-200 transition-all duration-300"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label
+                            htmlFor="pincode"
+                            className="text-sm font-medium text-gray-700"
+                          >
+                            Pincode
+                          </Label>
+                          <Field
+                            as={Input}
+                            id="pincode"
+                            name="pincode"
+                            type="text"
+                            placeholder="12345"
+                            className="border-gray-200 focus:border-amber-300 focus:ring-amber-200 transition-all duration-300"
+                          />
                         </div>
                       </div>
                     </CardContent>

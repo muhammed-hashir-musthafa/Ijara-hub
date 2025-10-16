@@ -3,6 +3,8 @@ import mongoose, { Model } from "mongoose";
 export interface IRoom {
   roomNumber: string;
   title: string;
+  description?: string;
+  category: "hotel" | "apartment" | "villa" | "studio" | "penthouse";
   type: "single" | "double" | "suite" | "deluxe" | "presidential";
   rooms: {
     bedroom: number;
@@ -10,15 +12,17 @@ export interface IRoom {
   };
   areaSqft?: number;
   pricePerNight: number;
-  amenities: string[];
+  capacity: number;
+  floor: number;
+  location: "dubai-marina" | "downtown-dubai" | "business-bay" | "jumeirah" | "deira" | "abu-dhabi" | "sharjah";
   address: {
     place?: string;
     pincode?: number;
   };
-  capacity: number;
-  floor: number;
+  amenities: string[];
   images: string[];
-  description?: string;
+  status: "active" | "inactive" | "pending";
+  owner: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
