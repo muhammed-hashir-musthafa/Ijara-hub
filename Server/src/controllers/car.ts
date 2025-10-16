@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import Car from "../models/car";
+import { successResponse, errorResponse } from "../utils/responseHandler";
 
 interface AuthRequest extends Request {
   user?: { id: string; email: string; role: string; };
@@ -18,24 +19,31 @@ export const getCars = async (req: Request, res: Response) => {
       if (maxRate) filter.dailyRate.$lte = Number(maxRate);
     }
     
+    const totalItems = await Car.countDocuments(filter);
     const cars = await Car.find(filter)
       .limit(Number(limit))
       .skip((Number(page) - 1) * Number(limit))
       .sort({ createdAt: -1 });
     
-    res.json({ cars });
+    const pagination = {
+      currentPage: Number(page),
+      totalPages: Math.ceil(totalItems / Number(limit)),
+      totalItems
+    };
+    
+    return successResponse(res, "Cars fetched successfully", { cars }, pagination);
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch cars" });
+    return errorResponse(res, 500, "Failed to fetch cars", error);
   }
 };
 
 export const getCarById = async (req: Request, res: Response) => {
   try {
     const car = await Car.findById(req.params.id);
-    if (!car) return res.status(404).json({ error: "Car not found" });
-    res.json({ car });
+    if (!car) return errorResponse(res, 404, "Car not found");
+    return successResponse(res, "Car fetched successfully", { car });
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch car" });
+    return errorResponse(res, 500, "Failed to fetch car", error);
   }
 };
 
@@ -43,28 +51,28 @@ export const createCar = async (req: AuthRequest, res: Response) => {
   try {
     const car = new Car(req.body);
     await car.save();
-    res.status(201).json({ car });
+    return successResponse(res, "Car created successfully", { car });
   } catch (error) {
-    res.status(500).json({ error: "Failed to create car" });
+    return errorResponse(res, 500, "Failed to create car", error);
   }
 };
 
 export const updateCar = async (req: AuthRequest, res: Response) => {
   try {
     const car = await Car.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!car) return res.status(404).json({ error: "Car not found" });
-    res.json({ car });
+    if (!car) return errorResponse(res, 404, "Car not found");
+    return successResponse(res, "Car updated successfully", { car });
   } catch (error) {
-    res.status(500).json({ error: "Failed to update car" });
+    return errorResponse(res, 500, "Failed to update car", error);
   }
 };
 
 export const deleteCar = async (req: AuthRequest, res: Response) => {
   try {
     const car = await Car.findByIdAndDelete(req.params.id);
-    if (!car) return res.status(404).json({ error: "Car not found" });
-    res.json({ message: "Car deleted successfully" });
+    if (!car) return errorResponse(res, 404, "Car not found");
+    return successResponse(res, "Car deleted successfully");
   } catch (error) {
-    res.status(500).json({ error: "Failed to delete car" });
+    return errorResponse(res, 500, "Failed to delete car", error);
   }
 };

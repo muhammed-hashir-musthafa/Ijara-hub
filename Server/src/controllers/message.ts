@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { Message, Conversation } from "../models/message";
 import mongoose from "mongoose";
+import { successResponse, errorResponse } from "../utils/responseHandler";
 
 interface AuthRequest extends Request {
   user?: {
@@ -24,9 +25,9 @@ export const getConversations = async (req: AuthRequest, res: Response) => {
     .populate("propertyId")
     .sort({ lastMessageAt: -1 });
 
-    res.json({ conversations });
+    return successResponse(res, "Conversations fetched successfully", { conversations });
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch conversations" });
+    return errorResponse(res, 500, "Failed to fetch conversations", error);
   }
 };
 
@@ -36,6 +37,7 @@ export const getMessages = async (req: AuthRequest, res: Response) => {
     const { conversationId } = req.params;
     const { page = 1, limit = 50 } = req.query;
     
+    const totalItems = await Message.countDocuments({ conversationId, isDeleted: false });
     const messages = await Message.find({
       conversationId,
       isDeleted: false
@@ -46,9 +48,15 @@ export const getMessages = async (req: AuthRequest, res: Response) => {
     .limit(Number(limit))
     .skip((Number(page) - 1) * Number(limit));
 
-    res.json({ messages: messages.reverse() });
+    const pagination = {
+      currentPage: Number(page),
+      totalPages: Math.ceil(totalItems / Number(limit)),
+      totalItems
+    };
+
+    return successResponse(res, "Messages fetched successfully", { messages: messages.reverse() }, pagination);
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch messages" });
+    return errorResponse(res, 500, "Failed to fetch messages", error);
   }
 };
 
@@ -73,9 +81,9 @@ export const createConversation = async (req: AuthRequest, res: Response) => {
       await conversation.save();
     }
     
-    res.json({ conversation });
+    return successResponse(res, "Conversation created successfully", { conversation });
   } catch (error) {
-    res.status(500).json({ error: "Failed to create conversation" });
+    return errorResponse(res, 500, "Failed to create conversation", error);
   }
 };
 
@@ -102,9 +110,9 @@ export const markAsRead = async (req: AuthRequest, res: Response) => {
       [`unreadCount.${userId}`]: 0
     });
     
-    res.json({ success: true });
+    return successResponse(res, "Messages marked as read successfully");
   } catch (error) {
-    res.status(500).json({ error: "Failed to mark messages as read" });
+    return errorResponse(res, 500, "Failed to mark messages as read", error);
   }
 };
 
@@ -120,11 +128,11 @@ export const deleteMessage = async (req: AuthRequest, res: Response) => {
     );
     
     if (!message) {
-      return res.status(404).json({ error: "Message not found" });
+      return errorResponse(res, 404, "Message not found");
     }
     
-    res.json({ success: true });
+    return successResponse(res, "Message deleted successfully");
   } catch (error) {
-    res.status(500).json({ error: "Failed to delete message" });
+    return errorResponse(res, 500, "Failed to delete message", error);
   }
 };

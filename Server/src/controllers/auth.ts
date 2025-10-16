@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { generateToken } from "../utils/jwt";
 import User from "../models/user";
+import { successResponse, errorResponse } from "../utils/responseHandler";
 
 // Admin Login
 export const adminLogin = async (req: Request, res: Response) => {
@@ -9,12 +10,12 @@ export const adminLogin = async (req: Request, res: Response) => {
 
     const user = await User.findOne({ email, role: "admin" });
     if (!user) {
-      return res.status(401).json({ error: "Invalid admin credentials" });
+      return errorResponse(res, 401, "Invalid admin credentials");
     }
 
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
-      return res.status(401).json({ error: "Invalid admin credentials" });
+      return errorResponse(res, 401, "Invalid admin credentials");
     }
 
     const token = generateToken({
@@ -23,9 +24,9 @@ export const adminLogin = async (req: Request, res: Response) => {
       role: user.role
     });
 
-    res.json({ message: "Admin login successful", token, user });
+    return successResponse(res, "Admin login successful", { token, user });
   } catch (error) {
-    res.status(500).json({ error: "Admin login failed" });
+    return errorResponse(res, 500, "Admin login failed", error);
   }
 };
 
@@ -35,17 +36,17 @@ export const login = async (req: Request, res: Response) => {
     const { email, password, role } = req.body;
 
     if (!role || !["owner", "renter"].includes(role)) {
-      return res.status(400).json({ error: "Valid role required" });
+      return errorResponse(res, 400, "Valid role required");
     }
 
     const user = await User.findOne({ email, role });
     if (!user) {
-      return res.status(401).json({ error: "Invalid credentials" });
+      return errorResponse(res, 401, "Invalid credentials");
     }
 
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
-      return res.status(401).json({ error: "Invalid credentials" });
+      return errorResponse(res, 401, "Invalid credentials");
     }
 
     user.lastLogin = new Date();
@@ -57,9 +58,9 @@ export const login = async (req: Request, res: Response) => {
       role: user.role
     });
 
-    res.json({ message: "Login successful", token, user });
+    return successResponse(res, "Login successful", { token, user });
   } catch (error) {
-    res.status(500).json({ error: "Login failed" });
+    return errorResponse(res, 500, "Login failed", error);
   }
 };
 
@@ -70,7 +71,7 @@ export const ownerSignup = async (req: Request, res: Response) => {
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ error: "Email already exists" });
+      return errorResponse(res, 400, "Email already exists");
     }
 
     const user = new User({
@@ -92,9 +93,9 @@ export const ownerSignup = async (req: Request, res: Response) => {
       role: user.role
     });
 
-    res.status(201).json({ message: "Owner registered successfully", token, user });
+    return successResponse(res, "Owner registered successfully", { token, user });
   } catch (error) {
-    res.status(500).json({ error: "Owner registration failed" });
+    return errorResponse(res, 500, "Owner registration failed", error);
   }
 };
 
@@ -105,7 +106,7 @@ export const renterSignup = async (req: Request, res: Response) => {
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ error: "Email already exists" });
+      return errorResponse(res, 400, "Email already exists");
     }
 
     const user = new User({
@@ -128,22 +129,22 @@ export const renterSignup = async (req: Request, res: Response) => {
       role: user.role
     });
 
-    res.status(201).json({ message: "Renter registered successfully", token, user });
+    return successResponse(res, "Renter registered successfully", { token, user });
   } catch (error) {
-    res.status(500).json({ error: "Renter registration failed" });
+    return errorResponse(res, 500, "Renter registration failed", error);
   }
 };
 
 export const logout = async (req: Request, res: Response) => {
-  res.json({ message: "Logout successful" });
+  return successResponse(res, "Logout successful");
 };
 
 export const getProfile = async (req: any, res: Response) => {
   try {
     const user = await User.findById(req.user?.id).select("-password");
-    if (!user) return res.status(404).json({ error: "User not found" });
-    res.json({ user });
+    if (!user) return errorResponse(res, 404, "User not found");
+    return successResponse(res, "Profile fetched successfully", { user });
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch profile" });
+    return errorResponse(res, 500, "Failed to fetch profile", error);
   }
 };
