@@ -1,6 +1,8 @@
 import mongoose, { Model } from "mongoose";
 
 export interface ICar {
+  title: string;
+  description?: string;
   brand: string;
   model: string;
   year: number;
@@ -10,13 +12,16 @@ export interface ICar {
   transmission: "manual" | "automatic" | "cvt";
   fuelType: "petrol" | "diesel" | "hybrid" | "electric";
   seatingCapacity: number;
-  adress: {
+  color: string;
+  location: "dubai-marina" | "downtown-dubai" | "business-bay" | "jumeirah" | "deira" | "abu-dhabi" | "sharjah";
+  address: {
     place?: string;
     pincode?: number;
   };
-  features: string[];
+  amenities: string[];
   images: string[];
-  color: string;
+  status: "active" | "inactive" | "pending";
+  owner: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }

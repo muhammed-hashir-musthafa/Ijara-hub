@@ -22,6 +22,21 @@ const RoomSchema = new mongoose.Schema<IRoom, RoomModel, IRoomMethods>(
     title: {
       type: String,
       required: [true, "Title is required"],
+      trim: true,
+      maxlength: [100, "Title cannot exceed 100 characters"],
+    },
+    description: {
+      type: String,
+      trim: true,
+      maxlength: [500, "Description cannot exceed 500 characters"],
+    },
+    category: {
+      type: String,
+      required: [true, "Room category is required"],
+      enum: {
+        values: ["hotel", "apartment", "villa", "studio", "penthouse"],
+        message: "Invalid room category",
+      },
     },
     type: {
       type: String,
@@ -52,6 +67,19 @@ const RoomSchema = new mongoose.Schema<IRoom, RoomModel, IRoomMethods>(
       min: [0, "Price cannot be negative"],
       max: [50000, "Price cannot exceed 50,000"],
     },
+    capacity: {
+      type: Number,
+      required: [true, "Room capacity is required"],
+      min: [1, "Capacity must be at least 1"],
+      max: [10, "Capacity cannot exceed 10"],
+    },
+    floor: {
+      type: Number,
+      required: [true, "Floor number is required"],
+      min: [1, "Floor must be at least 1"],
+      max: [100, "Floor cannot exceed 100"],
+    },
+    address: addressSchema,
     amenities: [
       {
         type: String,
@@ -78,29 +106,16 @@ const RoomSchema = new mongoose.Schema<IRoom, RoomModel, IRoomMethods>(
         },
       },
     ],
-    address: addressSchema,
-    capacity: {
-      type: Number,
-      required: [true, "Room capacity is required"],
-      min: [1, "Capacity must be at least 1"],
-      max: [10, "Capacity cannot exceed 10"],
-    },
-    floor: {
-      type: Number,
-      required: [true, "Floor number is required"],
-      min: [1, "Floor must be at least 1"],
-      max: [100, "Floor cannot exceed 100"],
-    },
     images: [
       {
         type: String,
         trim: true,
       },
     ],
-    description: {
-      type: String,
-      trim: true,
-      maxlength: [500, "Description cannot exceed 500 characters"],
+    owner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: [true, "Owner is required"],
     },
   },
   {
@@ -113,10 +128,12 @@ const RoomSchema = new mongoose.Schema<IRoom, RoomModel, IRoomMethods>(
 // Indexes
 RoomSchema.index({ roomNumber: 1 }, { unique: true });
 RoomSchema.index({ status: 1 });
+RoomSchema.index({ category: 1 });
 RoomSchema.index({ type: 1 });
 RoomSchema.index({ pricePerNight: 1 });
 RoomSchema.index({ floor: 1 });
 RoomSchema.index({ amenities: 1 });
+RoomSchema.index({ owner: 1 });
 
 const Room = mongoose.model<IRoom, RoomModel>("Room", RoomSchema);
 export default Room;

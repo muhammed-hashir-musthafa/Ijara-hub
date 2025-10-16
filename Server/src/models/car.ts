@@ -8,6 +8,17 @@ const addressSchema = new mongoose.Schema({
 
 const CarSchema = new mongoose.Schema<ICar, CarModel, ICarMethods>(
   {
+    title: {
+      type: String,
+      required: [true, "Title is required"],
+      trim: true,
+      maxlength: [100, "Title cannot exceed 100 characters"],
+    },
+    description: {
+      type: String,
+      trim: true,
+      maxlength: [500, "Description cannot exceed 500 characters"],
+    },
     brand: {
       type: String,
       required: [true, "Car make is required"],
@@ -42,20 +53,11 @@ const CarSchema = new mongoose.Schema<ICar, CarModel, ICarMethods>(
       min: [0, "Daily rate cannot be negative"],
       max: [10000, "Daily rate cannot exceed 10,000"],
     },
-
     category: {
       type: String,
       required: [true, "Car category is required"],
       enum: {
-        values: [
-          "economy",
-          "compact",
-          "midsize",
-          "luxury",
-          "suv",
-          "sports",
-          "convertible",
-        ],
+        values: ["economy", "compact", "midsize", "luxury", "suv", "sports"],
         message: "Invalid car category",
       },
     },
@@ -81,8 +83,15 @@ const CarSchema = new mongoose.Schema<ICar, CarModel, ICarMethods>(
       min: [2, "Seating capacity must be at least 2"],
       max: [8, "Seating capacity cannot exceed 8"],
     },
-    adress: addressSchema,
-    features: [
+    color: {
+      type: String,
+      required: [true, "Car color is required"],
+      trim: true,
+      minlength: [3, "Color must be at least 3 characters"],
+      maxlength: [20, "Color cannot exceed 20 characters"],
+    },
+    address: addressSchema,
+    amenities: [
       {
         type: String,
         trim: true,
@@ -101,7 +110,7 @@ const CarSchema = new mongoose.Schema<ICar, CarModel, ICarMethods>(
             "premium_audio",
             "parking_sensors",
           ],
-          message: "Invalid feature type",
+          message: "Invalid amenity type",
         },
       },
     ],
@@ -111,12 +120,10 @@ const CarSchema = new mongoose.Schema<ICar, CarModel, ICarMethods>(
         trim: true,
       },
     ],
-    color: {
-      type: String,
-      required: [true, "Car color is required"],
-      trim: true,
-      minlength: [3, "Color must be at least 3 characters"],
-      maxlength: [20, "Color cannot exceed 20 characters"],
+    owner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: [true, "Owner is required"],
     },
   },
   {
@@ -128,12 +135,12 @@ const CarSchema = new mongoose.Schema<ICar, CarModel, ICarMethods>(
 
 // Indexes
 CarSchema.index({ licensePlate: 1 }, { unique: true });
-CarSchema.index({ availabilityStatus: 1 });
-CarSchema.index({ make: 1, model: 1 });
+CarSchema.index({ status: 1 });
+CarSchema.index({ brand: 1, model: 1 });
 CarSchema.index({ category: 1 });
 CarSchema.index({ dailyRate: 1 });
-CarSchema.index({ "location.branch": 1 });
 CarSchema.index({ year: -1 });
+CarSchema.index({ owner: 1 });
 
 // Virtual for full car name
 CarSchema.virtual("fullName").get(function () {
