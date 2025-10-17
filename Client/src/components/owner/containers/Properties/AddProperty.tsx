@@ -2,10 +2,7 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/base/ui/button";
-import {
-  Card,
-  CardContent,
-} from "@/components/base/ui/card";
+import { Card, CardContent } from "@/components/base/ui/card";
 import {
   ArrowLeft,
   Home,
@@ -22,12 +19,9 @@ import { PropertyForm } from "@/types/owner";
 import { useRouter } from "next/navigation";
 import AddPropertyForm from "@/components/owner/forms/AddPropertyForm";
 
-
-
 export default function AddPropertyPage() {
   const [step, setStep] = useState(1);
-  const [propertyType, setPropertyType] = useState<"room" | "car" | null>(null);
-  const [draggedOver, setDraggedOver] = useState(false);
+  const [propertyType, setPropertyType] = useState<"room" | "car">("room");
   const router = useRouter();
   const handleTypeSelect = (type: "room" | "car") => {
     setPropertyType(type);
@@ -46,8 +40,6 @@ export default function AddPropertyPage() {
       setSubmitting(false);
     }, 1000);
   };
-
-
 
   // Step 1: Property Type Selection
   if (step === 1) {
@@ -329,9 +321,12 @@ export default function AddPropertyPage() {
             </div>
           </div>
 
-          <AddPropertyForm propertyType={propertyType} onSubmit={handleSubmit} />
-
-
+          {propertyType && (
+            <AddPropertyForm
+              propertyType={propertyType}
+              onSubmit={handleSubmit}
+            />
+          )}
 
           {/* Progress Indicator */}
           <div className="fixed bottom-6 right-6 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-4 animate-fade-in-up animation-delay-700">
