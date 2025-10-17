@@ -11,6 +11,7 @@ import roomRoutes from "./routes/room";
 import carRoutes from "./routes/car";
 import messageRoutes from "./routes/message";
 import { setupMessageSocket } from "./controllers/messageSocket";
+import { apiLimiter } from "./middleware/rateLimiter";
 
 
 
@@ -38,6 +39,9 @@ app.use(cors({
 }));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
+
+// Apply general rate limiting to all API routes
+app.use("/api", apiLimiter);
 
 // Health check
 app.get("/health", (req, res) => {

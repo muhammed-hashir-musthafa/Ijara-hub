@@ -1,6 +1,7 @@
 import express from "express";
 import { getCars, getCarById, createCar, updateCar, deleteCar } from "../controllers/car";
 import { authenticateToken, authorizeRoles } from "../middleware/auth";
+import { uploadLimiter } from "../middleware/rateLimiter";
 
 const router = express.Router();
 
@@ -12,10 +13,10 @@ router.get("/:id", getCarById);
 router.use(authenticateToken);
 
 // Create car (owner/admin only)
-router.post("/", authorizeRoles("owner", "admin"), createCar);
+router.post("/", uploadLimiter, authorizeRoles("owner", "admin"), createCar);
 
 // Update car (owner/admin only)
-router.put("/:id", authorizeRoles("owner", "admin"), updateCar);
+router.put("/:id", uploadLimiter, authorizeRoles("owner", "admin"), updateCar);
 
 // Delete car (owner/admin only)
 router.delete("/:id", authorizeRoles("owner", "admin"), deleteCar);
