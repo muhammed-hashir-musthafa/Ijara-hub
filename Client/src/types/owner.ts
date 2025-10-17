@@ -26,6 +26,24 @@ export interface Property {
   amenities: string[];
   guests?: number;
   passengers?: number;
+  description?: string;
+  bedrooms?: string;
+  bathrooms?: string;
+  area?: string;
+  lastUpdated?: string;
+  owner?: {
+    id: string;
+    name: string;
+    avatar: string;
+    rating: number;
+    reviewCount: number;
+    properties: number;
+    responseTime: string;
+    joinedYear: string;
+    verified: boolean;
+    languages: string[];
+    about: string;
+  };
 }
 
 export type PropertyType = "room" | "car";
@@ -40,29 +58,38 @@ export interface Filters {
   category: string;
 }
 
- export interface BasePropertyForm {
-   title: string;
-   description: string;
-   price: string;
-   location: string;
-   category: string;
-   images: string[];
-   amenities: string[];
- }
- 
- export interface RoomForm extends BasePropertyForm {
-   bedrooms: string;
-   bathrooms: string;
-   area: string;
- }
- 
- export interface CarForm extends BasePropertyForm {
-   brand: string;
-   model: string;
-   year: string;
-   fuelType: string;
-   transmission: string;
- }
- 
- export type PropertyForm = RoomForm | CarForm;
- 
+export interface BasePropertyForm {
+  title: string;
+  description: string;
+  price: string;
+  category: string;
+  images: string[];
+  amenities: string[];
+}
+
+export interface RoomForm extends BasePropertyForm {
+  roomNumber: string;
+  type: string;
+  bedrooms: string;
+  bathrooms: string;
+  area: string;
+  capacity: string;
+  floor: string;
+  place: string;
+  pincode: string;
+}
+
+export interface CarForm extends BasePropertyForm {
+  brand: string;
+  model: string;
+  year: string;
+  licensePlate: string;
+  fuelType: string;
+  transmission: string;
+  seatingCapacity: string;
+  color: string;
+  place: string;
+  pincode: string;
+}
+
+export type PropertyForm = RoomForm | CarForm;
