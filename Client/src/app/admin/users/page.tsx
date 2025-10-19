@@ -1,12 +1,29 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/base/ui/card"
-import { Badge } from "@/components/base/ui/badge"
-import { Button } from "@/components/base/ui/button"
-import { Input } from "@/components/base/ui/input"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/base/ui/avatar"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/base/ui/tabs"
+import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
+import { AxiosError } from "axios";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/base/ui/card";
+import { Badge } from "@/components/base/ui/badge";
+import { Button } from "@/components/base/ui/button";
+import { Input } from "@/components/base/ui/input";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/base/ui/avatar";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/base/ui/tabs";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,9 +31,15 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/base/ui/dropdown-menu"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/base/ui/table"
-import { useTranslation, type Language } from "@/lib/i18n"
+} from "@/components/base/ui/dropdown-menu";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/base/ui/table";
 import {
   Users,
   Search,
@@ -30,26 +53,60 @@ import {
   MapPin,
   CheckCircle,
   Clock,
-} from "lucide-react"
+} from "lucide-react";
+import { getUsers, deleteUser } from "@/services/userService";
+import { User } from "@/types/auth";
 
 export default function UserManagementPage() {
-  const [lang] = useState<Language>("en")
-  const [searchQuery, setSearchQuery] = useState("")
-  const [activeTab, setActiveTab] = useState("all")
-  const t = useTranslation(lang)
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("all");
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchUsers = async () => {
+    try {
+      setIsLoading(true);
+      const response = await getUsers();
+      setUsers(response.users);
+    } catch (error: unknown) {
+      toast.error("Failed to load users. Please try again.");
+      console.error("Error fetching users:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    try {
+      await deleteUser(userId);
+      toast.success("User deleted successfully");
+      fetchUsers();
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        toast.error(error.response?.data?.message || "Failed to delete user");
+      } else {
+        toast.error("Failed to delete user");
+      }
+      console.error("Error deleting user:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const userStats = [
     {
-      title: t.totalUsers,
-      value: "12,847",
+      title: "Total Users",
+      value: users.length.toString(),
       change: "+247 this week",
       icon: Users,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
     },
     {
-      title: t.activeUsers,
-      value: "11,203",
+      title: "Active Users",
+      value: users.filter((u) => u.isActive).length.toString(),
       change: "87% active rate",
       icon: UserCheck,
       color: "text-green-600",
@@ -57,161 +114,87 @@ export default function UserManagementPage() {
     },
     {
       title: "Property Owners",
-      value: "3,421",
+      value: users.filter((u) => u.role === "owner").length.toString(),
       change: "+89 this week",
       icon: Building2,
       color: "text-purple-600",
       bgColor: "bg-purple-50",
     },
     {
-      title: t.suspendedUsers,
-      value: "156",
+      title: "Suspended Users",
+      value: users.filter((u) => !u.isActive).length.toString(),
       change: "1.2% of total",
       icon: UserX,
       color: "text-red-600",
       bgColor: "bg-red-50",
     },
-  ]
+  ];
 
-  const mockUsers = [
-    {
-      id: "1",
-      firstName: "Ahmed",
-      lastName: "Al-Rashid",
-      email: "ahmed.rashid@email.com",
-      phoneNumber: "+971 50 123 4567",
-      role: "owner" as const,
-      isVerified: true,
-      status: "active" as const,
-      lastLogin: "2024-01-15T10:30:00Z",
-      registrationDate: "2023-08-15T14:20:00Z",
-      location: "Dubai, UAE",
-      properties: 5,
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    {
-      id: "2",
-      firstName: "Sarah",
-      lastName: "Johnson",
-      email: "sarah.johnson@email.com",
-      phoneNumber: "+971 55 987 6543",
-      role: "renter" as const,
-      isVerified: true,
-      status: "active" as const,
-      lastLogin: "2024-01-14T16:45:00Z",
-      registrationDate: "2023-11-22T09:15:00Z",
-      location: "Abu Dhabi, UAE",
-      properties: 0,
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    {
-      id: "3",
-      firstName: "Mohammed",
-      lastName: "Hassan",
-      email: "mohammed.hassan@email.com",
-      phoneNumber: "+971 52 456 7890",
-      role: "owner" as const,
-      isVerified: false,
-      status: "pending" as const,
-      lastLogin: "2024-01-13T12:20:00Z",
-      registrationDate: "2024-01-10T11:30:00Z",
-      location: "Sharjah, UAE",
-      properties: 2,
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    {
-      id: "4",
-      firstName: "Emma",
-      lastName: "Wilson",
-      email: "emma.wilson@email.com",
-      phoneNumber: "+971 56 234 5678",
-      role: "renter" as const,
-      isVerified: true,
-      status: "suspended" as const,
-      lastLogin: "2024-01-05T08:15:00Z",
-      registrationDate: "2023-09-30T13:45:00Z",
-      location: "Dubai, UAE",
-      properties: 0,
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-    {
-      id: "5",
-      firstName: "Khalid",
-      lastName: "Al-Mansoori",
-      email: "khalid.mansoori@email.com",
-      phoneNumber: "+971 50 345 6789",
-      role: "owner" as const,
-      isVerified: true,
-      status: "active" as const,
-      lastLogin: "2024-01-15T14:10:00Z",
-      registrationDate: "2023-06-12T16:20:00Z",
-      location: "Abu Dhabi, UAE",
-      properties: 12,
-      avatar: "/placeholder.svg?height=40&width=40",
-    },
-  ]
-
-  const getStatusBadge = (status: string, isVerified: boolean) => {
-    if (status === "suspended") {
-      return <Badge variant="destructive">Suspended</Badge>
+  const getStatusBadge = (user: User) => {
+    if (!user.isActive) {
+      return <Badge variant="destructive">Suspended</Badge>;
     }
-    if (status === "pending" || !isVerified) {
-      return <Badge variant="secondary">Pending Verification</Badge>
+    if (!user.isVerified) {
+      return <Badge variant="secondary">Pending Verification</Badge>;
     }
     return (
       <Badge variant="default" className="bg-green-100 text-green-800">
         Active
       </Badge>
-    )
-  }
+    );
+  };
 
   const getVerificationIcon = (isVerified: boolean) => {
     return isVerified ? (
       <CheckCircle className="h-4 w-4 text-green-500" />
     ) : (
       <Clock className="h-4 w-4 text-yellow-500" />
-    )
-  }
+    );
+  };
 
   const getRoleIcon = (role: string) => {
     return role === "owner" ? (
       <Building2 className="h-4 w-4 text-purple-500" />
     ) : (
       <Users className="h-4 w-4 text-blue-500" />
-    )
-  }
+    );
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
-    })
-  }
+    });
+  };
 
-  const filteredUsers = mockUsers.filter((user) => {
+  const filteredUsers = users.filter((user) => {
     const matchesSearch =
-      user.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase())
+      user.fname.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.lname.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchQuery.toLowerCase());
 
-    if (activeTab === "all") return matchesSearch
-    if (activeTab === "active") return matchesSearch && user.status === "active"
-    if (activeTab === "pending") return matchesSearch && (user.status === "pending" || !user.isVerified)
-    if (activeTab === "suspended") return matchesSearch && user.status === "suspended"
-    if (activeTab === "owners") return matchesSearch && user.role === "owner"
-    if (activeTab === "renters") return matchesSearch && user.role === "renter"
+    if (activeTab === "all") return matchesSearch;
+    if (activeTab === "active") return matchesSearch && user.isActive;
+    if (activeTab === "pending") return matchesSearch && !user.isVerified;
+    if (activeTab === "suspended") return matchesSearch && !user.isActive;
+    if (activeTab === "owners") return matchesSearch && user.role === "owner";
+    if (activeTab === "renters") return matchesSearch && user.role === "renter";
 
-    return matchesSearch
-  })
+    return matchesSearch;
+  });
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">{t.userManagement}</h1>
-          <p className="text-muted-foreground">Manage platform users and their permissions</p>
+          <h1 className="text-3xl font-bold text-foreground">
+            User Management
+          </h1>
+          <p className="text-muted-foreground">
+            Manage platform users and their permissions
+          </p>
         </div>
         <Button className="bg-primary hover:bg-primary/90">
           <Users className="h-4 w-4 mr-2" />
@@ -224,13 +207,17 @@ export default function UserManagementPage() {
         {userStats.map((stat) => (
           <Card key={stat.title} className="border-border/50">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                {stat.title}
+              </CardTitle>
               <div className={`p-2 rounded-lg ${stat.bgColor}`}>
                 <stat.icon className={`h-4 w-4 ${stat.color}`} />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-foreground">{stat.value}</div>
+              <div className="text-2xl font-bold text-foreground">
+                {stat.value}
+              </div>
               <p className="text-xs text-muted-foreground">{stat.change}</p>
             </CardContent>
           </Card>
@@ -244,7 +231,9 @@ export default function UserManagementPage() {
             <Users className="h-5 w-5 text-primary" />
             User Directory
           </CardTitle>
-          <CardDescription>Search, filter, and manage all platform users</CardDescription>
+          <CardDescription>
+            Search, filter, and manage all platform users
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {/* Search and Filters */}
@@ -265,7 +254,11 @@ export default function UserManagementPage() {
           </div>
 
           {/* User Tabs */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="space-y-4"
+          >
             <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="all">All Users</TabsTrigger>
               <TabsTrigger value="active">Active</TabsTrigger>
@@ -291,88 +284,113 @@ export default function UserManagementPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredUsers.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-10 w-10">
-                              <AvatarImage
-                                src={user.avatar || "/placeholder.svg"}
-                                alt={`${user.firstName} ${user.lastName}`}
-                              />
-                              <AvatarFallback>
-                                {user.firstName[0]}
-                                {user.lastName[0]}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="space-y-1">
-                              <p className="text-sm font-medium text-foreground">
-                                {user.firstName} {user.lastName}
-                              </p>
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <Mail className="h-3 w-3" />
-                                <span>{user.email}</span>
+                    {isLoading
+                      ? [...Array(5)].map((_, i) => (
+                          <TableRow key={i}>
+                            <TableCell colSpan={7}>
+                              <div className="flex items-center space-x-4 animate-pulse">
+                                <div className="rounded-full bg-gray-200 h-10 w-10"></div>
+                                <div className="space-y-2 flex-1">
+                                  <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                                  <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <MapPin className="h-3 w-3" />
-                                <span>{user.location}</span>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      : filteredUsers.map((user) => (
+                          <TableRow key={user.customId}>
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                <Avatar className="h-10 w-10">
+                                  <AvatarImage
+                                    src={
+                                      user.profileImage || "/placeholder.svg"
+                                    }
+                                    alt={`${user.fname} ${user.lname}`}
+                                  />
+                                  <AvatarFallback>
+                                    {user.fname[0]}
+                                    {user.lname[0]}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="space-y-1">
+                                  <p className="text-sm font-medium text-foreground">
+                                    {user.fname} {user.lname}
+                                  </p>
+                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    <Mail className="h-3 w-3" />
+                                    <span>{user.email}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    <MapPin className="h-3 w-3" />
+                                    <span>{user.address?.city || "UAE"}</span>
+                                  </div>
+                                </div>
                               </div>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            {getRoleIcon(user.role)}
-                            <span className="text-sm capitalize">{user.role}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>{getStatusBadge(user.status, user.isVerified)}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            {getVerificationIcon(user.isVerified)}
-                            <span className="text-sm">{user.isVerified ? "Verified" : "Pending"}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm text-muted-foreground">{formatDate(user.lastLogin)}</span>
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm">{user.properties}</span>
-                        </TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" className="h-8 w-8 p-0">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuItem>
-                                <Shield className="h-4 w-4 mr-2" />
-                                View Details
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Mail className="h-4 w-4 mr-2" />
-                                Send Message
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              {user.status === "suspended" ? (
-                                <DropdownMenuItem className="text-green-600">
-                                  <UserCheck className="h-4 w-4 mr-2" />
-                                  Activate User
-                                </DropdownMenuItem>
-                              ) : (
-                                <DropdownMenuItem className="text-red-600">
-                                  <UserX className="h-4 w-4 mr-2" />
-                                  Suspend User
-                                </DropdownMenuItem>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                {getRoleIcon(user.role)}
+                                <span className="text-sm capitalize">
+                                  {user.role}
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell>{getStatusBadge(user)}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                {getVerificationIcon(user.isVerified)}
+                                <span className="text-sm">
+                                  {user.isVerified ? "Verified" : "Pending"}
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-sm text-muted-foreground">
+                                {user.lastLogin
+                                  ? formatDate(user.lastLogin.toString())
+                                  : "Never"}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-sm">-</span>
+                            </TableCell>
+                            <TableCell>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                  <DropdownMenuItem>
+                                    <Shield className="h-4 w-4 mr-2" />
+                                    View Details
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem>
+                                    <Mail className="h-4 w-4 mr-2" />
+                                    Send Message
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    className="text-red-600"
+                                    onClick={() =>
+                                      handleDeleteUser(user.customId)
+                                    }
+                                  >
+                                    <UserX className="h-4 w-4 mr-2" />
+                                    Delete User
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+                        ))}
                   </TableBody>
                 </Table>
               </div>
@@ -380,7 +398,7 @@ export default function UserManagementPage() {
               {/* Pagination */}
               <div className="flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">
-                  Showing {filteredUsers.length} of {mockUsers.length} users
+                  Showing {filteredUsers.length} of {users.length} users
                 </p>
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" disabled>
@@ -396,5 +414,5 @@ export default function UserManagementPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
