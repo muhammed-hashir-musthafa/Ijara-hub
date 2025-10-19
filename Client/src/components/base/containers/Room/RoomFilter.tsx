@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
   Card,
   CardContent,
@@ -10,11 +10,26 @@ import {
 import { Button } from "@/components/base/ui/button";
 import { Input } from "@/components/base/ui/input";
 import { Users, Filter, Search, Award, Building } from "lucide-react";
+import { RoomQueryParams } from "@/types/room";
 
-const RoomsFilters = ({}: //   onFiltersChange,
-{
-  onFiltersChange?: () => void;
-}) => {
+interface RoomsFiltersProps {
+  onFiltersChange: (filters: RoomQueryParams) => void;
+}
+
+const RoomsFilters: React.FC<RoomsFiltersProps> = ({ onFiltersChange }) => {
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+
+  const handleCategoryChange = (category: string, checked: boolean) => {
+    let updatedCategories: string[];
+    if (checked) {
+      updatedCategories = [...selectedCategories, category];
+    } else {
+      updatedCategories = selectedCategories.filter((c) => c !== category);
+    }
+    setSelectedCategories(updatedCategories);
+    onFiltersChange({ category: updatedCategories[0] });
+  };
+
   const categories = [
     "Luxury",
     "Business",
@@ -65,6 +80,9 @@ const RoomsFilters = ({}: //   onFiltersChange,
                 <input
                   type="checkbox"
                   className="w-4 h-4 text-amber-600 bg-gray-100 border-gray-300 rounded focus:ring-amber-500"
+                  onChange={(e) =>
+                    handleCategoryChange(category, e.target.checked)
+                  }
                 />
                 <span className="text-sm text-gray-700 group-hover:text-amber-600 transition-colors">
                   {category}

@@ -1,14 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/base/ui/button";
 import {
-  Wifi,
-  Coffee,
-  Tv,
-  AirVent,
-  Utensils,
-  Dumbbell,
   Grid,
   List,
   Shield,
@@ -19,172 +13,55 @@ import {
 } from "lucide-react";
 import RoomsFilters from "../../../base/containers/Room/RoomFilter";
 import RoomCard from "../../../base/containers/Room/RoomCard";
-
-// Mock data
-const mockRooms = [
-  {
-    id: 1,
-    title: "Luxury Suite - Burj Khalifa View",
-    location: "Downtown Dubai",
-    price: 850,
-    originalPrice: 1000,
-    rating: 4.9,
-    reviews: 127,
-    image:
-      "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&h=600&fit=crop",
-    images: [
-      "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&h=600&fit=crop",
-    ],
-    amenities: ["WiFi", "Air Conditioning", "Room Service", "City View"],
-    guests: 2,
-    bedrooms: 1,
-    bathrooms: 1,
-    category: "Luxury",
-    isNew: true,
-    discount: 15,
-    size: 65,
-  },
-  {
-    id: 2,
-    title: "Premium Penthouse",
-    location: "Dubai Marina",
-    price: 1200,
-    rating: 4.8,
-    reviews: 89,
-    image:
-      "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop",
-    images: [
-      "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop",
-    ],
-    amenities: ["WiFi", "Kitchen", "Balcony", "Pool Access"],
-    guests: 4,
-    bedrooms: 2,
-    bathrooms: 2,
-    category: "Penthouse",
-    size: 120,
-  },
-  {
-    id: 3,
-    title: "Business Executive Suite",
-    location: "DIFC",
-    price: 650,
-    rating: 4.7,
-    reviews: 156,
-    image:
-      "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800&h=600&fit=crop",
-    images: [
-      "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800&h=600&fit=crop",
-    ],
-    amenities: ["WiFi", "Business Center", "Concierge", "Gym Access"],
-    guests: 2,
-    bedrooms: 1,
-    bathrooms: 1,
-    category: "Business",
-    size: 55,
-  },
-  {
-    id: 4,
-    title: "Family Villa with Pool",
-    location: "Jumeirah",
-    price: 950,
-    rating: 4.6,
-    reviews: 78,
-    image:
-      "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&h=600&fit=crop",
-    images: [
-      "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&h=600&fit=crop",
-    ],
-    amenities: ["WiFi", "Kitchen", "Pool Access", "Parking"],
-    guests: 6,
-    bedrooms: 3,
-    bathrooms: 2,
-    category: "Family",
-    size: 180,
-  },
-];
-
-// Room Detail Data
-export const roomDetailData = {
-  id: 1,
-  title: "Luxury Suite - Burj Khalifa View",
-  location: "Downtown Dubai",
-  price: 850,
-  originalPrice: 1000,
-  rating: 4.9,
-  reviews: 127,
-  images: [
-    "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&h=600&fit=crop",
-    "https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=800&h=600&fit=crop",
-    "https://images.unsplash.com/photo-1631049552240-59c37f38802b?w=800&h=600&fit=crop",
-  ],
-  category: "Luxury",
-  guests: 2,
-  bedrooms: 1,
-  bathrooms: 1,
-  size: 65,
-  description:
-    "Experience unparalleled luxury in this stunning suite with breathtaking views of the iconic Burj Khalifa. Located in the heart of Downtown Dubai, this elegantly appointed accommodation offers the perfect blend of comfort and sophistication for the discerning traveler.",
-  amenities: [
-    { name: "WiFi", icon: Wifi },
-    { name: "Air Conditioning", icon: AirVent },
-    { name: "Room Service", icon: Utensils },
-    { name: "Smart TV", icon: Tv },
-    { name: "Coffee Machine", icon: Coffee },
-    { name: "Gym Access", icon: Dumbbell },
-  ],
-  highlights: [
-    "Panoramic Burj Khalifa views",
-    "Premium location in Downtown Dubai",
-    "24/7 concierge service",
-    "Access to hotel facilities",
-    "Walking distance to Dubai Mall",
-  ],
-  host: {
-    id: 1,
-    name: "Emirates Luxury Hotels",
-    avatar:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face",
-    rating: 4.8,
-    reviews: 1250,
-    verified: true,
-    superhost: true,
-    joinedDate: "2018",
-    responseRate: 95,
-    responseTime: "Within an hour",
-    properties: 24,
-    location: "Dubai, UAE",
-    languages: ["English", "Arabic", "French"],
-    bio: "Luxury hospitality expert with over 15 years of experience in premium accommodations across Dubai. Passionate about creating unforgettable experiences for guests.",
-  },
-  userReviews: [
-    {
-      id: 1,
-      user: "Sarah M.",
-      rating: 5,
-      date: "2 weeks ago",
-      comment:
-        "Absolutely stunning views and impeccable service. The suite was even more beautiful than the photos. Highly recommend!",
-    },
-    {
-      id: 2,
-      user: "Ahmed K.",
-      rating: 5,
-      date: "1 month ago",
-      comment:
-        "Perfect location and amazing amenities. The staff went above and beyond to make our stay memorable.",
-    },
-  ],
-};
+import { getRooms } from "@/services/roomService";
+import { Room, RoomQueryParams } from "@/types/room";
 
 const RoomsPage = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = useState("recommended");
-  const [rooms] = useState(mockRooms);
+  const [rooms, setRooms] = useState<Room[]>([]);
   const [isVisible, setIsVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [filters, setFilters] = useState<RoomQueryParams>({});
+  const [totalRooms, setTotalRooms] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const fetchRooms = useCallback(
+    async (params: RoomQueryParams = {}) => {
+      try {
+        setIsLoading(true);
+        const response = await getRooms({
+          ...params,
+          page: currentPage,
+          limit: 8,
+        });
+        setRooms(response?.data?.rooms || []);
+        console.log(response)
+        setTotalRooms(response?.data?.pagination?.totalItems || 0);
+      } catch (error: unknown) {
+        console.error("Error fetching rooms:", error);
+        setRooms([]);
+        setTotalRooms(0);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [currentPage]
+  );
 
   useEffect(() => {
     setIsVisible(true);
-  }, []);
+    fetchRooms(filters);
+  }, [fetchRooms, filters]);
+
+  const handleFiltersChange = (newFilters: RoomQueryParams) => {
+    setFilters(newFilters);
+    setCurrentPage(1);
+  };
+
+  const handleLoadMore = () => {
+    setCurrentPage((prev) => prev + 1);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-20">
@@ -236,7 +113,7 @@ const RoomsPage = () => {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Filters Sidebar */}
           <div className="lg:w-80 flex-shrink-0">
-            <RoomsFilters onFiltersChange={() => {}} />
+            <RoomsFilters onFiltersChange={handleFiltersChange} />
           </div>
 
           {/* Main Content */}
@@ -246,7 +123,9 @@ const RoomsPage = () => {
               <div className="flex items-center gap-6">
                 <div>
                   <h2 className="text-lg font-bold text-gray-900">
-                    {rooms.length} Properties Available
+                    {isLoading
+                      ? "Loading..."
+                      : `${totalRooms} Properties Available`}
                   </h2>
                   <p className="text-sm text-gray-600">
                     Find your perfect stay
@@ -294,34 +173,78 @@ const RoomsPage = () => {
             </div>
 
             {/* Results */}
-            <div
-              className={`grid gap-8 ${
-                viewMode === "grid"
-                  ? "grid-cols-1 md:grid-cols-2 xl:grid-cols-2"
-                  : "grid-cols-1"
-              }`}
-            >
-              {rooms.map((room, index) => (
-                <RoomCard
-                  key={room.id}
-                  room={room}
-                  index={index}
-                  viewMode={viewMode}
-                />
-              ))}
-            </div>
+            {isLoading ? (
+              <div className="grid gap-8 grid-cols-1 md:grid-cols-2 xl:grid-cols-2">
+                {[...Array(4)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="bg-white rounded-2xl p-6 animate-pulse"
+                  >
+                    <div className="h-48 bg-gray-200 rounded-xl mb-4"></div>
+                    <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                  </div>
+                ))}
+              </div>
+            ) : rooms?.length === 0 ? (
+              <div className="text-center py-16">
+                <Building className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-600 mb-2">
+                  No rooms found
+                </h3>
+                <p className="text-gray-500">
+                  Try adjusting your filters or search criteria
+                </p>
+              </div>
+            ) : (
+              <div
+                className={`grid gap-8 ${
+                  viewMode === "grid"
+                    ? "grid-cols-1 md:grid-cols-2 xl:grid-cols-2"
+                    : "grid-cols-1"
+                }`}
+              >
+                {rooms?.map((room, index) => (
+                  <RoomCard
+                    key={room?._id}
+                    room={{
+                      id: room?._id as unknown as string & number,
+                      title: room?.title,
+                      location: room?.location,
+                      price: room?.pricePerNight,
+                      rating: 4.5,
+                      reviews: 0,
+                      image: room?.images?.[0] || "/placeholder-room.jpg",
+                      images: room?.images,
+                      amenities: room?.amenities,
+                      guests: room?.capacity,
+                      bedrooms: room?.rooms?.bedroom,
+                      bathrooms: room?.rooms?.bathroom,
+                      category: room?.category,
+                      size: room?.areaSqft || 0,
+                    }}
+                    index={index}
+                    viewMode={viewMode}
+                  />
+                ))}
+              </div>
+            )}
 
             {/* Load More */}
-            <div className="text-center mt-16">
-              <Button
-                variant="outline"
-                size="lg"
-                className="border-2 border-amber-500 text-amber-600 hover:bg-amber-500 hover:text-white transition-all duration-300 transform hover:scale-105 group px-8 py-4 rounded-xl"
-              >
-                Load More Properties
-                <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </div>
+            {rooms?.length < totalRooms && (
+              <div className="text-center mt-16">
+                <Button
+                  onClick={handleLoadMore}
+                  disabled={isLoading}
+                  variant="outline"
+                  size="lg"
+                  className="border-2 border-amber-500 text-amber-600 hover:bg-amber-500 hover:text-white transition-all duration-300 transform hover:scale-105 group px-8 py-4 rounded-xl"
+                >
+                  {isLoading ? "Loading..." : "Load More Properties"}
+                  <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>

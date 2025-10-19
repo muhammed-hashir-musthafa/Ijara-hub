@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Formik, Field, ErrorMessage, Form, FormikHelpers } from "formik";
 import * as Yup from "yup";
+import toast from "react-hot-toast";
+import { AxiosError } from "axios";
 import { Button } from "@/components/base/ui/button";
 import { Input } from "@/components/base/ui/input";
 import { Label } from "@/components/base/ui/label";
@@ -25,6 +27,7 @@ import {
   Sparkles,
   ArrowRight,
 } from "lucide-react";
+import { login } from "@/services/authService";
 
 // Validation Schema
 const LoginSchema = Yup.object().shape({
@@ -58,11 +61,29 @@ export default function UnifiedLoginPage() {
   ) => {
     setIsLoading(true);
     try {
-      console.log("[Login] Form submitted:", values);
-      actions.resetForm();
-      // TODO: Replace with actual API login call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-    } catch (error) {
+      const loginData = {
+        email: values.email,
+        password: values.password
+      };
+      const response = await login(loginData);
+      toast.success("Login successful!");
+      localStorage.setItem("token", response?.data?.token);
+      
+      // Redirect based on user role
+      if (response?.data?.user?.role === "owner") {
+        window.location.href = "/owner";
+      } else if (response?.data?.user?.role === "admin") {
+        window.location.href = "/admin";
+      } else {
+        window.location.href = "/";
+      }
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        const errorMessage = error.response?.data?.message || "Login failed. Please check your credentials.";
+        toast.error(errorMessage);
+      } else {
+        toast.error("Login failed. Please check your credentials.");
+      }
       console.error("Login error:", error);
     } finally {
       setIsLoading(false);

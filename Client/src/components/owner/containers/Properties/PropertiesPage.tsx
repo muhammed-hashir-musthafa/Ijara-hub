@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import toast from "react-hot-toast";
+import { AxiosError } from "axios";
 import { Button } from "@/components/base/ui/button";
 import { Input } from "@/components/base/ui/input";
 import { Card, CardContent } from "@/components/base/ui/card";
@@ -33,112 +35,11 @@ import {
   ChevronRight,
   Clock,
   Globe,
+  Trash2,
 } from "lucide-react";
 import { Filters, Property, PropertyStatus } from "@/types/owner";
-
-// Mock data
-const mockProperties: Property[] = [
-  {
-    id: "1",
-    title: "Luxury Suite - Dubai Marina",
-    type: "room",
-    category: "luxury",
-    location: "Dubai Marina",
-    price: 850,
-    currency: "AED",
-    status: "active",
-    images: [
-      "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&h=600&fit=crop",
-    ],
-    rating: 4.9,
-    reviewCount: 127,
-    bookings: 24,
-    revenue: 18500,
-    createdAt: "2024-01-15",
-    amenities: ["Wifi", "Coffee", "TV", "AC"],
-    guests: 2,
-  },
-  {
-    id: "2",
-    title: "BMW X5 - Premium SUV",
-    type: "car",
-    category: "luxury",
-    location: "Downtown Dubai",
-    price: 450,
-    currency: "AED",
-    status: "active",
-    images: [
-      "https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=800&h=600&fit=crop",
-    ],
-    rating: 4.8,
-    reviewCount: 89,
-    bookings: 18,
-    revenue: 12300,
-    createdAt: "2024-02-01",
-    amenities: ["GPS", "Insurance", "24/7 Support"],
-    passengers: 4,
-  },
-  {
-    id: "3",
-    title: "Penthouse - Business Bay",
-    type: "room",
-    category: "luxury",
-    location: "Business Bay",
-    price: 1200,
-    currency: "AED",
-    status: "pending",
-    images: [
-      "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop",
-    ],
-    rating: 5.0,
-    reviewCount: 45,
-    bookings: 15,
-    revenue: 22100,
-    createdAt: "2024-02-10",
-    amenities: ["Wifi", "Coffee", "TV", "AC"],
-    guests: 4,
-  },
-  {
-    id: "4",
-    title: "Mercedes S-Class - Executive",
-    type: "car",
-    category: "premium",
-    location: "Jumeirah",
-    price: 320,
-    currency: "AED",
-    status: "inactive",
-    images: [
-      "https://images.unsplash.com/photo-1563720360172-67b8f3dce741?w=800&h=600&fit=crop",
-    ],
-    rating: 4.7,
-    reviewCount: 62,
-    bookings: 12,
-    revenue: 8900,
-    createdAt: "2024-01-20",
-    amenities: ["GPS", "Insurance", "Chauffeur"],
-    passengers: 4,
-  },
-  {
-    id: "5",
-    title: "Studio Apartment - Deira",
-    type: "room",
-    category: "standard",
-    location: "Deira",
-    price: 280,
-    currency: "AED",
-    status: "active",
-    images: [
-      "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&h=600&fit=crop",
-    ],
-    rating: 4.3,
-    reviewCount: 38,
-    bookings: 8,
-    revenue: 5600,
-    createdAt: "2024-02-05",
-    amenities: ["Wifi", "Coffee", "TV", "AC"],
-    guests: 2,
-  },
-];
+import { getRooms, deleteRoom } from "@/services/roomService";
+import { getCars, deleteCar } from "@/services/carService";
 
 export default function PropertiesPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -149,9 +50,113 @@ export default function PropertiesPage() {
     location: "",
     category: "",
   });
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchProperties = async () => {
+    try {
+      setIsLoading(true);
+      const [roomsResponse, carsResponse] = await Promise.all([
+        getRooms({ status: 'active' }),
+        getCars({ status: 'active' })
+      ]);
+
+      const mapRoomCategory = (category: string): 'luxury' | 'premium' | 'standard' | 'economy' => {
+        const categoryMap: Record<string, 'luxury' | 'premium' | 'standard' | 'economy'> = {
+          'hotel': 'luxury',
+          'apartment': 'premium', 
+          'villa': 'luxury',
+          'studio': 'standard',
+          'penthouse': 'luxury'
+        };
+        return categoryMap[category] || 'standard';
+      };
+
+      const mapCarCategory = (category: string): 'luxury' | 'premium' | 'standard' | 'economy' => {
+        const categoryMap: Record<string, 'luxury' | 'premium' | 'standard' | 'economy'> = {
+          'economy': 'economy',
+          'compact': 'standard',
+          'midsize': 'standard', 
+          'luxury': 'luxury',
+          'suv': 'premium',
+          'sports': 'luxury',
+          'convertible': 'luxury'
+        };
+        return categoryMap[category] || 'standard';
+      };
+
+      const roomProperties: Property[] = roomsResponse?.data?.rooms?.map(room => ({
+        id: room._id,
+        title: room.title,
+        type: 'room',
+        category: mapRoomCategory(room.category),
+        location: room.location,
+        price: room.pricePerNight,
+        currency: 'AED',
+        status: room.status as PropertyStatus,
+        images: room.images.length > 0 ? room.images : ['/placeholder-room.jpg'],
+        rating: 4.5,
+        reviewCount: 0,
+        bookings: 0,
+        revenue: 0,
+        createdAt: new Date(room.createdAt).toISOString().split('T')[0],
+        amenities: room.amenities,
+        guests: room.capacity
+      }));
+
+      const carProperties: Property[] = carsResponse?.data?.cars?.map(car => ({
+        id: car._id,
+        title: car.title,
+        type: 'car',
+        category: mapCarCategory(car.category),
+        location: car.location,
+        price: car.dailyRate,
+        currency: 'AED',
+        status: car.status as PropertyStatus,
+        images: car.images.length > 0 ? car.images : ['/placeholder-car.jpg'],
+        rating: 4.5,
+        reviewCount: 0,
+        bookings: 0,
+        revenue: 0,
+        createdAt: new Date(car.createdAt).toISOString().split('T')[0],
+        amenities: car.amenities,
+        passengers: car.seatingCapacity
+      }));
+
+      setProperties([...roomProperties, ...carProperties]);
+    } catch (error: unknown) {
+      toast.error('Failed to load properties. Please try again.');
+      console.error('Error fetching properties:', error);
+      setProperties([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteProperty = async (property: Property) => {
+    try {
+      if (property.type === 'room') {
+        await deleteRoom(property.id);
+      } else {
+        await deleteCar(property.id);
+      }
+      toast.success('Property deleted successfully');
+      fetchProperties();
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        toast.error(error.response?.data?.message || 'Failed to delete property');
+      } else {
+        toast.error('Failed to delete property');
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchProperties();
+  }, []);
 
   const filteredProperties = useMemo(() => {
-    return mockProperties.filter((p) => {
+    return properties.filter((p) => {
       const matchesSearch =
         p.title.toLowerCase().includes(filters.search.toLowerCase()) ||
         p.location.toLowerCase().includes(filters.search.toLowerCase());
@@ -171,7 +176,7 @@ export default function PropertiesPage() {
         matchesCategory
       );
     });
-  }, [filters]);
+  }, [filters, properties]);
 
   const getStatusColor = (status: PropertyStatus) => {
     switch (status) {
@@ -208,9 +213,8 @@ export default function PropertiesPage() {
     property: Property;
     index: number;
   }) => (
-    <Link
-      href={`/owner/properties/${property.id}`}
-      className="block group overflow-hidden hover:shadow-2xl transition-all duration-700 transform hover:-translate-y-3 bg-gradient-to-br from-white to-gray-50/50 border-0 shadow-lg animate-fade-in-up backdrop-blur-sm rounded-2xl focus:outline-none focus:ring-2 focus:ring-amber-500"
+    <div
+      className="group overflow-hidden hover:shadow-2xl transition-all duration-700 transform hover:-translate-y-3 bg-gradient-to-br from-white to-gray-50/50 border-0 shadow-lg animate-fade-in-up backdrop-blur-sm rounded-2xl"
       style={{ animationDelay: `${index * 0.1}s` }}
     >
       <div className="relative overflow-hidden rounded-t-2xl">
@@ -306,13 +310,26 @@ export default function PropertiesPage() {
               per {property.type === "room" ? "night" : "day"}
             </div>
           </div>
-          <div className="text-amber-600 flex items-center text-sm font-semibold">
-            View Details
-            <ChevronRight className="h-4 w-4 ml-1" />
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleDeleteProperty(property)}
+              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+            <Link
+              href={`/owner/properties/${property.id}`}
+              className="text-amber-600 flex items-center text-sm font-semibold hover:text-amber-700"
+            >
+              View Details
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Link>
           </div>
         </div>
       </CardContent>
-    </Link>
+    </div>
   );
 
   return (
@@ -475,7 +492,18 @@ export default function PropertiesPage() {
           </CardContent>
         </Card>
 
-        {filteredProperties.length === 0 ? (
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl p-6 animate-pulse">
+                <div className="h-56 bg-gray-200 rounded-xl mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-2/3 mb-4"></div>
+                <div className="h-8 bg-gray-200 rounded"></div>
+              </div>
+            ))}
+          </div>
+        ) : filteredProperties.length === 0 ? (
           <div className="text-center py-20">
             <div className="w-20 h-20 bg-gradient-to-br from-amber-100 to-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
               <Sparkles className="h-10 w-10 text-amber-600 animate-pulse" />

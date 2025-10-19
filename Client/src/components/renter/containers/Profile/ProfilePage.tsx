@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import toast from "react-hot-toast";
+import { AxiosError } from "axios";
 import {
   Card,
   CardContent,
@@ -14,42 +16,96 @@ import {
   Phone,
   MapPin,
   Calendar,
-  Star,
   Trophy,
   CheckCircle,
-  Heart,
-  Home,
 } from "lucide-react";
 import Image from "next/image";
+import { getProfile } from "@/services/authService";
+import { User as UserType } from "@/types/auth";
 
 const UserProfilePage = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const [user, setUser] = useState<UserType | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchProfile = async () => {
+    try {
+      setIsLoading(true);
+      const response = await getProfile();
+      setUser(response?.data?.user);
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        if (error?.response?.status === 401) {
+          localStorage.removeItem("token");
+          window.location.href = "/login";
+          return;
+        }
+        toast.error(error?.response?.data?.message || "Failed to load profile");
+        console.error(
+          "Profile fetch failed:",
+          error.response?.data?.message || error.message
+        );
+      } else if (error instanceof Error) {
+        console.error("Profile fetch failed:", error.message);
+        toast.error(`${error?.message}`);
+      } else {
+        console.error("Profile fetch failed:", error);
+        toast.error(`Something went wrong! Please try again later`);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     setTimeout(() => setIsVisible(true), 100);
+    fetchProfile();
   }, []);
 
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-orange-50 to-yellow-100 pt-16 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">No profile data available</p>
+        </div>
+      </div>
+    );
+  }
+
   const userData = {
-    name: "Emma Richardson",
-    isVerified: true,
-    email: "emma.richardson@email.com",
-    phone: "+971 50 987 6543",
-    location: "Dubai Marina, UAE",
-    avatar:
-      "https://images.unsplash.com/photo-1494790108755-2616b612b77c?w=400&h=400&fit=crop&crop=face",
-    coverPhoto:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&h=400&fit=crop",
-    joinedDate: "June 2021",
-    rentalsCompleted: 18,
-    totalSpent: "AED 85,000",
-    savedProperties: 12,
-    wishlistItems: 6,
-    membershipLevel: "Gold",
-    rating: 4.7,
-    bio: "Tenant and property seeker. I enjoy exploring premium rentals that balance comfort, design, and location.",
-    preferredPropertyTypes: ["Apartments", "Penthouses", "Villas"],
-    amenities: ["Pool Access", "Gym", "High-Speed Internet", "Pet Friendly"],
+    name: `${user.fname} ${user.lname}`,
+    isVerified: user.isVerified,
+    email: user.email,
+    phone: user.phone,
+    location: user.address
+      ? `${user.address.city || ""}, ${user.address.emirate || "UAE"}`.trim()
+      : "UAE",
+    avatar: user.profileImage || "/default-avatar.png",
+    joinedDate: user.createdAt
+      ? new Date(user.createdAt).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+        })
+      : "Unknown",
+    membershipLevel:
+      user.role === "owner"
+        ? "Premium"
+        : user.role === "admin"
+        ? "Admin"
+        : "Standard",
+    bio: user.companyDetails?.bio || "No bio available",
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-orange-50 to-yellow-100 pt-16 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-orange-50 to-yellow-100 relative overflow-hidden pt-16">
@@ -103,10 +159,6 @@ const UserProfilePage = () => {
                       <Trophy className="h-3 w-3 mr-1" />
                       {userData.membershipLevel} Member
                     </Badge>
-                    <div className="flex items-center space-x-1">
-                      <Star className="h-4 w-4 fill-white" />
-                      <span className="font-semibold">{userData.rating}</span>
-                    </div>
                   </div>
                   <div className="flex flex-wrap justify-center md:justify-start gap-4 text-xs sm:text-sm opacity-90">
                     <div className="flex items-center space-x-1">
@@ -138,41 +190,6 @@ const UserProfilePage = () => {
                 <p className="text-gray-700 mb-4 text-sm sm:text-base">
                   {userData.bio}
                 </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="font-semibold text-gray-800 mb-2 flex items-center">
-                      <Home className="h-4 w-4 mr-2 text-orange-500" />
-                      Preferred Properties
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {userData.preferredPropertyTypes.map((type, i) => (
-                        <Badge
-                          key={i}
-                          className="bg-gradient-to-r from-orange-500 to-yellow-500 text-white text-xs sm:text-sm"
-                        >
-                          {type}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-800 mb-2 flex items-center">
-                      <Heart className="h-4 w-4 mr-2 text-orange-500" />
-                      Amenities
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {userData.amenities.map((amenity, i) => (
-                        <Badge
-                          key={i}
-                          variant="outline"
-                          className="border-orange-300 text-orange-600 hover:bg-orange-50 text-xs sm:text-sm"
-                        >
-                          {amenity}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                </div>
               </CardContent>
             </Card>
           </div>

@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { FormikHelpers } from "formik";
+import toast from "react-hot-toast";
+import { AxiosError } from "axios";
 import {
   Card,
   CardContent,
@@ -14,6 +16,7 @@ import { SocialLogin } from "@/components/auth/social-login";
 import { Building2, Sparkles } from "lucide-react";
 import { OwnerSignupFormValues } from "@/types/form";
 import OwnerSignupForm from "@/components/owner/forms/OwnerSignupForm";
+import { ownerSignup } from "@/services/authService";
 
 const OwnerSignupPage = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -24,11 +27,28 @@ const OwnerSignupPage = () => {
   ) => {
     setIsLoading(true);
     try {
-      console.log("[Owner Signup] Form submitted:", values);
+      const signupData = {
+        fname: values.firstName,
+        lname: values.lastName,
+        email: values.email,
+        password: values.password,
+        phone: values.phoneNumber,
+        gender: values.gender,
+        age: parseInt(values.age)
+      };
+      const response = await ownerSignup(signupData);
+      toast.success("Account created successfully!");
+      localStorage.setItem("token", response?.data?.token);
       actions.resetForm();
-      // TODO: Implement actual owner signup logic
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-    } catch (error) {
+      // Redirect to owner dashboard
+      window.location.href = "/owner";
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        const errorMessage = error.response?.data?.message || "Signup failed. Please try again.";
+        toast.error(errorMessage);
+      } else {
+        toast.error("Signup failed. Please try again.");
+      }
       console.error("Signup error:", error);
     } finally {
       setIsLoading(false);

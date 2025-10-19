@@ -1,7 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
+import toast from "react-hot-toast";
+import { AxiosError } from "axios";
 import { Button } from "@/components/base/ui/button";
 import {
   Card,
@@ -35,6 +38,8 @@ import {
 import Image from "next/image";
 import { PropertyStatus, Property, PropertyCategory } from "@/types/owner";
 import EditPropertyModal from "./EditPropertyModal";
+import { getRoomById } from "@/services/roomService";
+import { getCarById } from "@/services/carService";
 
 // Mock property data
 const mockProperty: Property = {
@@ -85,11 +90,117 @@ const mockProperty: Property = {
 export default function PropertyDetailsPage() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showFullDescription, setShowFullDescription] = useState(false);
-  const [property, setProperty] = useState<Property>(mockProperty);
+  const [property, setProperty] = useState<Property | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const params = useParams();
+  const propertyId = params?.id as string;
+
+  const fetchProperty = useCallback(async () => {
+    if (!propertyId) return;
+    
+    try {
+      setIsLoading(true);
+      // Try to fetch as room first, then as car
+      let propertyData: Property;
+      try {
+        const roomResponse = await getRoomById(propertyId);
+        const room = roomResponse?.data?.room;
+        propertyData = {
+          id: room._id,
+          title: room.title,
+          type: 'room',
+          category: room.category as PropertyCategory,
+          location: room.location,
+          price: room.pricePerNight,
+          currency: 'AED',
+          status: room.status as PropertyStatus,
+          description: room.description || '',
+          images: room.images.length > 0 ? room.images : ['/placeholder-room.jpg'],
+          amenities: room.amenities,
+          rating: 4.5,
+          reviewCount: 0,
+          bookings: 0,
+          revenue: 0,
+          bedrooms: room.rooms.bedroom.toString(),
+          bathrooms: room.rooms.bathroom.toString(),
+          area: room.areaSqft?.toString() || '0',
+          createdAt: new Date(room.createdAt).toISOString().split('T')[0],
+          lastUpdated: new Date(room.updatedAt).toISOString().split('T')[0],
+          guests: room.capacity,
+          owner: mockProperty.owner
+        };
+      } catch {
+        // If room fetch fails, try car
+        const carResponse = await getCarById(propertyId);
+        const car = carResponse?.data?.car;
+        propertyData = {
+          id: car._id,
+          title: car.title,
+          type: 'car',
+          category: car.category as PropertyCategory,
+          location: car.location,
+          price: car.dailyRate,
+          currency: 'AED',
+          status: car.status as PropertyStatus,
+          description: car.description || '',
+          images: car.images.length > 0 ? car.images : ['/placeholder-car.jpg'],
+          amenities: car.amenities,
+          rating: 4.5,
+          reviewCount: 0,
+          bookings: 0,
+          revenue: 0,
+          createdAt: new Date(car.createdAt).toISOString().split('T')[0],
+          lastUpdated: new Date(car.updatedAt).toISOString().split('T')[0],
+          passengers: car.seatingCapacity,
+          owner: mockProperty.owner
+        };
+      }
+      setProperty(propertyData);
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        toast.error(error.response?.data?.message || 'Failed to load property details.');
+      } else {
+        toast.error('Failed to load property details.');
+      }
+      console.error('Error fetching property:', error);
+      // Fallback to mock data
+      setProperty(mockProperty);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [propertyId]);
+
+  useEffect(() => {
+    fetchProperty();
+  }, [fetchProperty]);
 
   const handlePropertyUpdate = (updatedProperty: Property) => {
     setProperty(updatedProperty);
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading property details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!property) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">Property not found.</p>
+          <Link href="/owner/properties" className="text-amber-600 hover:text-amber-700 mt-2 inline-block">
+            Back to Properties
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const handleShare = async () => {
     const shareUrl = `${window.location.origin}/rooms/${property.id}`;

@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import toast from "react-hot-toast";
+import { AxiosError } from "axios";
 import { Button } from "@/components/base/ui/button";
 import { Card, CardContent } from "@/components/base/ui/card";
 import {
@@ -15,9 +17,11 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { FormikHelpers } from "formik";
-import { PropertyForm } from "@/types/owner";
+import { PropertyForm, RoomForm, CarForm } from "@/types/owner";
 import { useRouter } from "next/navigation";
 import AddPropertyForm from "@/components/owner/forms/AddPropertyForm";
+import { createRoom } from "@/services/roomService";
+import { createCar } from "@/services/carService";
 
 export default function AddPropertyPage() {
   const [step, setStep] = useState(1);
@@ -28,17 +32,77 @@ export default function AddPropertyPage() {
     setStep(2);
   };
 
-  const handleSubmit = (
+  const handleSubmit = async (
     values: PropertyForm,
     { setSubmitting, resetForm }: FormikHelpers<PropertyForm>
   ) => {
-    console.log("Property form submitted:", { propertyType, ...values });
-
-    // Simulate submission
-    setTimeout(() => {
+    try {
+      setSubmitting(true);
+      
+      if (propertyType === 'room') {
+        const roomValues = values as RoomForm;
+        const roomData = {
+          roomNumber: roomValues.roomNumber || `R${Date.now()}`,
+          title: roomValues.title,
+          description: roomValues.description,
+          category: roomValues.category as 'hotel' | 'apartment' | 'villa' | 'studio' | 'penthouse',
+          type: roomValues.type as 'single' | 'double' | 'suite' | 'deluxe' | 'presidential',
+          rooms: {
+            bedroom: parseInt(roomValues.bedrooms) || 1,
+            bathroom: parseInt(roomValues.bathrooms) || 1
+          },
+          areaSqft: parseInt(roomValues.area) || undefined,
+          pricePerNight: parseFloat(roomValues.price),
+          capacity: parseInt(roomValues.capacity) || 1,
+          floor: parseInt(roomValues.floor) || 1,
+          location: roomValues.category as 'dubai-marina' | 'downtown-dubai' | 'business-bay' | 'jumeirah' | 'deira' | 'abu-dhabi' | 'sharjah',
+          address: {
+            place: roomValues.place,
+            pincode: parseInt(roomValues.pincode) || undefined
+          },
+          amenities: roomValues.amenities || [],
+          images: roomValues.images || []
+        };
+        await createRoom(roomData);
+      } else {
+        const carValues = values as CarForm;
+        const carData = {
+          title: carValues.title,
+          description: carValues.description,
+          brand: carValues.brand,
+          model: carValues.model,
+          year: parseInt(carValues.year) || new Date().getFullYear(),
+          licensePlate: carValues.licensePlate,
+          dailyRate: parseFloat(carValues.price),
+          category: carValues.category as 'economy' | 'compact' | 'midsize' | 'luxury' | 'suv' | 'sports' | 'convertible',
+          transmission: carValues.transmission as 'manual' | 'automatic' | 'cvt',
+          fuelType: carValues.fuelType as 'petrol' | 'diesel' | 'hybrid' | 'electric',
+          seatingCapacity: parseInt(carValues.seatingCapacity) || 4,
+          color: carValues.color,
+          location: carValues.category as 'dubai-marina' | 'downtown-dubai' | 'business-bay' | 'jumeirah' | 'deira' | 'abu-dhabi' | 'sharjah',
+          address: {
+            place: carValues.place,
+            pincode: parseInt(carValues.pincode) || undefined
+          },
+          amenities: carValues.amenities || [],
+          images: carValues.images || []
+        };
+        await createCar(carData);
+      }
+      
+      toast.success(`${propertyType === 'room' ? 'Room' : 'Car'} property added successfully!`);
       resetForm();
+      router.push('/owner/properties');
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        toast.error(error.response?.data?.message || 'Failed to add property. Please try again.');
+      } else {
+        toast.error('Failed to add property. Please try again.');
+      }
+      console.error('Error adding property:', error);
+    } finally {
       setSubmitting(false);
-    }, 1000);
+    }
   };
 
   // Step 1: Property Type Selection
