@@ -133,6 +133,14 @@ const CarSchema = new mongoose.Schema<ICar, CarModel, ICarMethods>(
   }
 );
 
+// Virtual for reviews
+CarSchema.virtual('reviews', {
+  ref: 'Review',
+  localField: '_id',
+  foreignField: 'propertyId',
+  match: { propertyType: 'car' }
+});
+
 // Indexes
 CarSchema.index({ licensePlate: 1 }, { unique: true });
 CarSchema.index({ status: 1 });

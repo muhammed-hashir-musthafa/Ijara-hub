@@ -125,6 +125,14 @@ const RoomSchema = new mongoose.Schema<IRoom, RoomModel, IRoomMethods>(
   }
 );
 
+// Virtual for reviews
+RoomSchema.virtual('reviews', {
+  ref: 'Review',
+  localField: '_id',
+  foreignField: 'propertyId',
+  match: { propertyType: 'room' }
+});
+
 // Indexes
 RoomSchema.index({ roomNumber: 1 }, { unique: true });
 RoomSchema.index({ status: 1 });
