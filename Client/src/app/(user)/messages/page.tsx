@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/base/ui/card";
 import { Badge } from "@/components/base/ui/badge";
 import { Button } from "@/components/base/ui/button";
 import { Input } from "@/components/base/ui/input";
+import { RouteGuard } from "@/components/auth/RouteGuard";
 import {
   Send,
   Phone,
@@ -242,7 +243,8 @@ const MessagePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br mt-24 from-gray-50 via-white to-gray-100 relative overflow-auto">
+    <RouteGuard allowedRoles={['renter', 'owner', 'admin']}>
+      <div className="min-h-screen bg-gradient-to-br mt-24 from-gray-50 via-white to-gray-100 relative overflow-auto">
       {/* Animated Background */}
       <div className="absolute inset-0 opacity-30">
         <div className="absolute top-20 left-20 w-64 h-64 bg-amber-200/30 rounded-full blur-3xl animate-blob"></div>
@@ -776,7 +778,8 @@ const MessagePage = () => {
           opacity: 1;
         }
       `}</style>
-    </div>
+      </div>
+    </RouteGuard>
   );
 };
 
