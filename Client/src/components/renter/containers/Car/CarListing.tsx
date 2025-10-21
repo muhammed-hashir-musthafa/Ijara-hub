@@ -211,31 +211,38 @@ export const CarsPage = () => {
                     : "grid-cols-1"
                 }`}
               >
-                {cars?.map((car, index) => (
-                  <CarCard
-                    key={car?._id}
-                    car={{
-                      id: car?._id,
-                      brand: car?.brand,
-                      model: car?.model,
-                      title: car?.title,
-                      year: car?.year,
-                      category: car?.category,
-                      image: car?.images?.[0] || "/placeholder-car.jpg",
-                      location: car?.location,
-                      rating: 4.5,
-                      reviews: 0,
-                      passengers: car?.seatingCapacity,
-                      fuelType: car?.fuelType,
-                      transmission: car?.transmission,
-                      features: car?.amenities,
-                      price: car?.dailyRate,
-                      isElectric: car?.fuelType === "electric",
-                    }}
-                    index={index}
-                    viewMode={viewMode}
-                  />
-                ))}
+                {cars?.map((car, index) => {
+                  const reviews = Array.isArray(car?.reviews) ? car.reviews : [];
+                  const avgRating = reviews.length > 0 
+                    ? reviews.reduce((sum: number, review) => sum + (review?.rating || 0), 0) / reviews.length 
+                    : 0;
+                  
+                  return (
+                    <CarCard
+                      key={car?._id}
+                      car={{
+                        id: car?._id,
+                        brand: car?.brand,
+                        model: car?.model,
+                        title: car?.title,
+                        year: car?.year,
+                        category: car?.category,
+                        image: car?.images?.[0] || "/placeholder-car.jpg",
+                        location: car?.address?.place || 'Dubai',
+                        rating: Math.round(avgRating * 10) / 10,
+                        reviews: reviews.length,
+                        passengers: car?.seatingCapacity,
+                        fuelType: car?.fuelType,
+                        transmission: car?.transmission,
+                        features: car?.amenities,
+                        price: car?.dailyRate,
+                        isElectric: car?.fuelType === "electric",
+                      }}
+                      index={index}
+                      viewMode={viewMode}
+                    />
+                  );
+                })}
               </div>
             )}
 

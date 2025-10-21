@@ -12,13 +12,22 @@ import {
   Info,
   ChevronRight,
   Sparkles,
+  LogOut,
 } from "lucide-react";
+import toast from "react-hot-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-
+  
   const pathname = usePathname();
+  const { isAuthenticated, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    toast.success('Logged out successfully');
+  };
 
   const navigation = [
     { name: "Home", href: "/", icon: Home },
@@ -105,31 +114,44 @@ export function Header() {
 
           {/* Desktop CTA Buttons */}
           <div className="hidden lg:flex items-center space-x-3">
-            <Link href="/login" passHref>
+            {isAuthenticated ? (
               <Button
+                onClick={handleLogout}
                 variant="outline"
-                className="border-2 border-gray-300 text-gray-700 hover:border-amber-500 hover:text-amber-600 hover:bg-amber-50 transition-all duration-300 rounded-xl px-6 group"
+                className="border-2 border-red-300 text-red-700 hover:border-red-500 hover:text-red-600 hover:bg-red-50 transition-all duration-300 rounded-xl px-6 group"
               >
-                <span>Login</span>
-                <ChevronRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                <LogOut className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+                <span>Logout</span>
               </Button>
-            </Link>
+            ) : (
+              <>
+                <Link href="/login" passHref>
+                  <Button
+                    variant="outline"
+                    className="border-2 border-gray-300 text-gray-700 hover:border-amber-500 hover:text-amber-600 hover:bg-amber-50 transition-all duration-300 rounded-xl px-6 group"
+                  >
+                    <span>Login</span>
+                    <ChevronRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </Link>
 
-            <Link href="/renter/signup" passHref>
-              <Button
-                variant="ghost"
-                className="text-gray-700 hover:text-amber-600 hover:bg-amber-50 transition-all duration-300 rounded-xl px-6"
-              >
-                Sign Up
-              </Button>
-            </Link>
+                <Link href="/renter/signup" passHref>
+                  <Button
+                    variant="ghost"
+                    className="text-gray-700 hover:text-amber-600 hover:bg-amber-50 transition-all duration-300 rounded-xl px-6"
+                  >
+                    Sign Up
+                  </Button>
+                </Link>
 
-            <Link href="/owner/signup" passHref>
-              <Button className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 rounded-xl px-6 group">
-                <Sparkles className="h-4 w-4 mr-2 group-hover:rotate-12 transition-transform" />
-                List Property
-              </Button>
-            </Link>
+                <Link href="/owner/signup" passHref>
+                  <Button className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 rounded-xl px-6 group">
+                    <Sparkles className="h-4 w-4 mr-2 group-hover:rotate-12 transition-transform" />
+                    List Property
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -203,25 +225,49 @@ export function Header() {
 
             {/* Mobile CTA */}
             <div className="flex flex-col space-y-3 px-4 pt-4 border-t border-gray-200">
-              <Button
-                variant="outline"
-                className="border-2 border-gray-300 text-gray-700 hover:border-amber-500 hover:text-amber-600 hover:bg-amber-50 transition-all duration-300 rounded-xl justify-center group"
-              >
-                Login
-                <ChevronRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
-              </Button>
-
-              <Button
-                variant="ghost"
-                className="text-gray-700 hover:text-amber-600 hover:bg-amber-50 transition-all duration-300 rounded-xl justify-center"
-              >
-                Sign Up
-              </Button>
-
-              <Button className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 rounded-xl justify-center group">
-                <Sparkles className="h-4 w-4 mr-2 group-hover:rotate-12 transition-transform" />
-                List Property
-              </Button>
+              {isAuthenticated ? (
+                <Button
+                  onClick={handleLogout}
+                  variant="outline"
+                  className="border-2 border-red-300 text-red-700 hover:border-red-500 hover:text-red-600 hover:bg-red-50 transition-all duration-300 rounded-xl justify-center group"
+                >
+                  <LogOut className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+                  Logout
+                </Button>
+              ) : (
+                <>
+                  <Link href="/login">
+                    <Button
+                      variant="outline"
+                      className="w-full border-2 border-gray-300 text-gray-700 hover:border-amber-500 hover:text-amber-600 hover:bg-amber-50 transition-all duration-300 rounded-xl justify-center group"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Login
+                      <ChevronRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </Link>
+                  
+                  <Link href="/renter/signup">
+                    <Button
+                      variant="ghost"
+                      className="w-full text-gray-700 hover:text-amber-600 hover:bg-amber-50 transition-all duration-300 rounded-xl justify-center"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Sign Up
+                    </Button>
+                  </Link>
+                  
+                  <Link href="/owner/signup">
+                    <Button 
+                      className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl justify-center group"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Sparkles className="h-4 w-4 mr-2 group-hover:rotate-12 transition-transform" />
+                      List Property
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

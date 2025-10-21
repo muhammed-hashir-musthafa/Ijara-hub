@@ -36,7 +36,7 @@ const RoomsPage = () => {
           limit: 8,
         });
         setRooms(response?.data?.rooms || []);
-        console.log(response)
+        // console.log(response)
         setTotalRooms(response?.data?.pagination?.totalItems || 0);
       } catch (error: unknown) {
         console.error("Error fetching rooms:", error);
@@ -204,29 +204,36 @@ const RoomsPage = () => {
                     : "grid-cols-1"
                 }`}
               >
-                {rooms?.map((room, index) => (
-                  <RoomCard
-                    key={room?._id}
-                    room={{
-                      id: room?._id as unknown as string & number,
-                      title: room?.title,
-                      location: room?.location,
-                      price: room?.pricePerNight,
-                      rating: 4.5,
-                      reviews: 0,
-                      image: room?.images?.[0] || "/placeholder-room.jpg",
-                      images: room?.images,
-                      amenities: room?.amenities,
-                      guests: room?.capacity,
-                      bedrooms: room?.rooms?.bedroom,
-                      bathrooms: room?.rooms?.bathroom,
-                      category: room?.category,
-                      size: room?.areaSqft || 0,
-                    }}
-                    index={index}
-                    viewMode={viewMode}
-                  />
-                ))}
+                {rooms?.map((room, index) => {
+                  const reviews = Array.isArray(room?.reviews) ? room.reviews : [];
+                  const avgRating = reviews.length > 0 
+                    ? reviews.reduce((sum: number, review) => sum + (review?.rating || 0), 0) / reviews.length 
+                    : 0;
+                  
+                  return (
+                    <RoomCard
+                      key={room?._id}
+                      room={{
+                        id: room?._id as unknown as string & number,
+                        title: room?.title,
+                        location: room?.address?.place || "Dubai",
+                        price: room?.pricePerNight,
+                        rating: Math.round(avgRating * 10) / 10,
+                        reviews: reviews.length,
+                        image: room?.images?.[0] || "/placeholder-room.jpg",
+                        images: room?.images,
+                        amenities: room?.amenities,
+                        guests: room?.capacity,
+                        bedrooms: room?.rooms?.bedroom,
+                        bathrooms: room?.rooms?.bathroom,
+                        category: room?.category,
+                        size: room?.areaSqft || 0,
+                      }}
+                      index={index}
+                      viewMode={viewMode}
+                    />
+                  );
+                })}
               </div>
             )}
 
