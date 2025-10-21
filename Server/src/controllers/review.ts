@@ -45,6 +45,18 @@ export const createReview = async (req: AuthRequest, res: Response) => {
     });
 
     await review.save();
+    
+    // Add review to property's reviews array
+    if (propertyType === "room") {
+      await Room.findByIdAndUpdate(propertyId, {
+        $push: { reviews: review._id }
+      });
+    } else {
+      await Car.findByIdAndUpdate(propertyId, {
+        $push: { reviews: review._id }
+      });
+    }
+    
     await review.populate("reviewer", "fname lname profileImage");
 
     return successResponse(res, "Review created successfully", { review });
@@ -117,10 +129,23 @@ export const deleteReview = async (req: AuthRequest, res: Response) => {
 
     const { id } = req.params;
 
-    const review = await Review.findOneAndDelete({ _id: id, reviewer: req.user.id });
+    const review = await Review.findOne({ _id: id, reviewer: req.user.id });
     if (!review) {
       return errorResponse(res, 404, "Review not found or unauthorized");
     }
+
+    // Remove review from property's reviews array
+    if (review.propertyType === "room") {
+      await Room.findByIdAndUpdate(review.propertyId, {
+        $pull: { reviews: review._id }
+      });
+    } else {
+      await Car.findByIdAndUpdate(review.propertyId, {
+        $pull: { reviews: review._id }
+      });
+    }
+    
+    await Review.findByIdAndDelete(id);
 
     return successResponse(res, "Review deleted successfully");
   } catch (error) {
