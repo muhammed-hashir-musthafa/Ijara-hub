@@ -10,7 +10,6 @@ import { Badge } from "@/components/base/ui/badge";
 import { Button } from "@/components/base/ui/button";
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
-import toast from "react-hot-toast";
 import { AxiosError } from "axios";
 import {
   Star,
@@ -27,9 +26,11 @@ import {
 } from "lucide-react";
 import { ImageGallery } from "../ImageGallery/ImageGallery";
 import OwnerProfileCard from "../OwnerProfileCard/OwnerProfileCard";
+import ReviewForm from "../../forms/ReviewForm";
 import { getCarById } from "@/services/carService";
 import { Car } from "@/types/car";
 import DetailPageSkeleton from "../DetailPageSkeleton";
+import Image from "next/image";
 
 const CarDetailPage = () => {
   const [activeTab, setActiveTab] = useState("overview");
@@ -45,15 +46,15 @@ const CarDetailPage = () => {
     try {
       setIsLoading(true);
       const response = await getCarById(carId);
-      console.log(response);
+      // console.log(response);
       setCar(response?.data?.car);
     } catch (error: unknown) {
       if (error instanceof AxiosError) {
-        toast.error(
+        console.error(
           error.response?.data?.message || "Failed to load car details."
         );
       } else {
-        toast.error("Failed to load car details.");
+        console.error("Failed to load car details.");
       }
       console.error("Error fetching car:", error);
       setCar(null);
@@ -80,6 +81,17 @@ const CarDetailPage = () => {
     );
   }
 
+  // Calculate dynamic rating and review count
+  const reviews = Array.isArray(car?.reviews) ? car.reviews : [];
+  const avgRating =
+    reviews.length > 0
+      ? reviews.reduce(
+          (sum: number, review) => sum + (review?.rating || 0),
+          0
+        ) / reviews.length
+      : 0;
+  const reviewCount = reviews.length;
+
   const displayData = car
     ? {
         title: car?.title,
@@ -91,13 +103,13 @@ const CarDetailPage = () => {
         passengers: car?.seatingCapacity,
         fuelType: car?.fuelType,
         transmission: car?.transmission,
-        images:
-          car?.images?.length > 0 ? car?.images : [],
+        images: car?.images?.length > 0 ? car?.images : [],
         description: car?.description || "No description available",
-        features: car?.amenities?.map((name: string) => ({ name, icon: null })) || [],
+        features:
+          car?.amenities?.map((name: string) => ({ name, icon: null })) || [],
         price: car?.dailyRate,
-        rating: car?.averageRating || 0,
-        reviews: car?.reviewCount || 0,
+        rating: Math.round(avgRating * 10) / 10,
+        reviews: reviewCount,
       }
     : null;
 
@@ -114,7 +126,7 @@ const CarDetailPage = () => {
     { id: "specs", label: "Specifications", icon: Settings },
     { id: "reviews", label: "Reviews", icon: Star },
   ];
-
+  // console.log(car)
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-20">
       {/* Hero Header */}
@@ -405,6 +417,13 @@ const CarDetailPage = () => {
 
               {activeTab === "reviews" && (
                 <div className="space-y-6">
+                  {/* Add Review Form */}
+                  <ReviewForm
+                    propertyId={carId}
+                    propertyType="car"
+                    onReviewAdded={fetchCar}
+                  />
+
                   {/* Reviews */}
                   <Card className="bg-gradient-to-br from-white to-gray-50 border-0 shadow-lg">
                     <CardHeader>
@@ -416,21 +435,76 @@ const CarDetailPage = () => {
                             reviews)
                           </span>
                         </CardTitle>
-                        <Button
-                          variant="outline"
-                          className="border-2 border-amber-500 text-amber-600 hover:bg-amber-500 hover:text-white rounded-xl"
-                        >
-                          View all reviews
-                        </Button>
                       </div>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-8">
-                        <div className="text-center py-8">
-                          <p className="text-gray-500">
-                            No reviews available yet.
-                          </p>
-                        </div>
+                        {car?.reviews && car.reviews.length > 0 ? (
+                          car.reviews.map((review) => (
+                            <div
+                              key={review._id}
+                              className="border-b border-gray-200 pb-6 last:border-b-0"
+                            >
+                              <div className="flex items-start space-x-4">
+                                {/* Profile Image */}
+                                <div className="flex-shrink-0">
+                                  {review.reviewer.profileImage ? (
+                                    <Image
+                                      width={40}
+                                      height={40}
+                                      src={review.reviewer.profileImage}
+                                      alt={`${review.reviewer.fname} ${review.reviewer.lname}`}
+                                      className="w-10 h-10 rounded-full object-cover"
+                                    />
+                                  ) : (
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 flex items-center justify-center text-white font-semibold text-sm">
+                                      {review.reviewer.fname.charAt(0)}
+                                      {review.reviewer.lname.charAt(0)}
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className="flex-1">
+                                  <div className="flex items-center space-x-2 mb-2">
+                                    <span className="font-semibold text-gray-900">
+                                      {review.reviewer.fname}{" "}
+                                      {review.reviewer.lname}
+                                    </span>
+                                    <div className="flex items-center">
+                                      {[...Array(5)].map((_, i) => (
+                                        <Star
+                                          key={i}
+                                          className={`h-4 w-4 ${
+                                            i < review.rating
+                                              ? "fill-amber-400 text-amber-400"
+                                              : "text-gray-300"
+                                          }`}
+                                        />
+                                      ))}
+                                    </div>
+                                  </div>
+
+                                  <div className="flex justify-between items-start">
+                                    <p className="text-gray-700 flex-1 mr-4">
+                                      {review.comment}
+                                    </p>
+                                    <p className="text-xs text-gray-500 flex-shrink-0">
+                                      {new Date(
+                                        review.createdAt
+                                      ).toLocaleDateString()}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center py-8">
+                            <p className="text-gray-500">
+                              No reviews available yet.
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -441,7 +515,7 @@ const CarDetailPage = () => {
 
           {/* Booking Sidebar */}
           <div className="lg:col-span-1">
-            <OwnerProfileCard />
+            <OwnerProfileCard ownerId={car?.owner?._id || ""} />
           </div>
         </div>
       </div>

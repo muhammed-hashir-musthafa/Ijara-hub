@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
-import toast from "react-hot-toast";
 import { AxiosError } from "axios";
 import {
   Card,
@@ -29,9 +28,11 @@ import { Button } from "@/components/base/ui/button";
 
 import { ImageGallery } from "../ImageGallery/ImageGallery";
 import OwnerProfileCard from "../OwnerProfileCard/OwnerProfileCard";
+import ReviewForm from "../../forms/ReviewForm";
 import { getRoomById } from "@/services/roomService";
 import { Room } from "@/types/room";
 import DetailPageSkeleton from "../DetailPageSkeleton";
+import Image from "next/image";
 
 const RoomDetailPage = () => {
   const [activeTab, setActiveTab] = useState("overview");
@@ -43,17 +44,19 @@ const RoomDetailPage = () => {
 
   const fetchRoom = useCallback(async () => {
     if (!roomId) return;
-    
+
     try {
       setIsLoading(true);
       const response = await getRoomById(roomId);
-      console.log(response)
+      // console.log(response)
       setRoom(response?.data?.room);
     } catch (error: unknown) {
       if (error instanceof AxiosError) {
-        toast.error(error.response?.data?.message || "Failed to load room details.");
+        console.error(
+          error.response?.data?.message || "Failed to load room details."
+        );
       } else {
-        toast.error("Failed to load room details.");
+        console.error("Failed to load room details.");
       }
       console.error("Error fetching room:", error);
       setRoom(null);
@@ -71,28 +74,46 @@ const RoomDetailPage = () => {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-20 flex items-center justify-center">
         <div className="text-center">
-          <h3 className="text-xl font-semibold text-gray-600 mb-2">Room not found</h3>
-          <p className="text-gray-500">The requested room could not be found.</p>
+          <h3 className="text-xl font-semibold text-gray-600 mb-2">
+            Room not found
+          </h3>
+          <p className="text-gray-500">
+            The requested room could not be found.
+          </p>
         </div>
       </div>
     );
   }
 
-  const displayData = room ? {
-    title: room?.title,
-    location: room?.address?.place,
-    category: room?.category,
-    guests: room?.capacity,
-    bedrooms: room?.rooms?.bedroom,
-    bathrooms: room?.rooms?.bathroom,
-    size: room?.areaSqft || 0,
-    images: room?.images?.length > 0 ? room?.images : [],
-    description: room?.description || "No description available",
-    amenities: room?.amenities?.map((name: string) => ({ name, icon: null })) || [],
-    price: room?.pricePerNight,
-    rating: room?.averageRating || 0,
-    reviews: room?.reviewCount || 0
-  } : null;
+  // Calculate dynamic rating and review count
+  const reviews = Array.isArray(room?.reviews) ? room.reviews : [];
+  const avgRating =
+    reviews.length > 0
+      ? reviews.reduce(
+          (sum: number, review) => sum + (review?.rating || 0),
+          0
+        ) / reviews.length
+      : 0;
+  const reviewCount = reviews.length;
+
+  const displayData = room
+    ? {
+        title: room?.title,
+        location: room?.address?.place,
+        category: room?.category,
+        guests: room?.capacity,
+        bedrooms: room?.rooms?.bedroom,
+        bathrooms: room?.rooms?.bathroom,
+        size: room?.areaSqft || 0,
+        images: room?.images?.length > 0 ? room?.images : [],
+        description: room?.description || "No description available",
+        amenities:
+          room?.amenities?.map((name: string) => ({ name, icon: null })) || [],
+        price: room?.pricePerNight,
+        rating: Math.round(avgRating * 10) / 10,
+        reviews: reviewCount,
+      }
+    : null;
 
   if (isLoading) {
     return <DetailPageSkeleton />;
@@ -107,7 +128,7 @@ const RoomDetailPage = () => {
     { id: "amenities", label: "Amenities", icon: Settings },
     { id: "reviews", label: "Reviews", icon: Star },
   ];
-
+  // console.log(room, "room")
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-20">
       {/* Hero Header */}
@@ -141,9 +162,7 @@ const RoomDetailPage = () => {
                   </div>
                   <div className="flex items-center space-x-1">
                     <MapPin className="h-5 w-5 text-amber-500" />
-                    <span className="font-medium">
-                      {displayData?.location}
-                    </span>
+                    <span className="font-medium">{displayData?.location}</span>
                   </div>
                 </div>
               </div>
@@ -260,19 +279,19 @@ const RoomDetailPage = () => {
                           Highlights
                         </h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {["Premium location", "Quality amenities", "Professional service"].map(
-                            (highlight: string, index: number) => (
-                              <div
-                                key={index}
-                                className="flex items-center space-x-3 p-3 bg-white rounded-lg shadow-sm"
-                              >
-                                <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
-                                <span className="text-gray-700">
-                                  {highlight}
-                                </span>
-                              </div>
-                            )
-                          )}
+                          {[
+                            "Premium location",
+                            "Quality amenities",
+                            "Professional service",
+                          ].map((highlight: string, index: number) => (
+                            <div
+                              key={index}
+                              className="flex items-center space-x-3 p-3 bg-white rounded-lg shadow-sm"
+                            >
+                              <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
+                              <span className="text-gray-700">{highlight}</span>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     </CardContent>
@@ -290,17 +309,22 @@ const RoomDetailPage = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {displayData?.amenities?.map((amenity: { name: string; icon: null }, index: number) => (
-                        <div
-                          key={index}
-                          className="flex items-center space-x-3 p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300"
-                        >
-                          <div className="w-2 h-2 bg-amber-500 rounded-full" />
-                          <span className="font-medium text-gray-700">
-                            {amenity.name}
-                          </span>
-                        </div>
-                      ))}
+                      {displayData?.amenities?.map(
+                        (
+                          amenity: { name: string; icon: null },
+                          index: number
+                        ) => (
+                          <div
+                            key={index}
+                            className="flex items-center space-x-3 p-4 bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300"
+                          >
+                            <div className="w-2 h-2 bg-amber-500 rounded-full" />
+                            <span className="font-medium text-gray-700">
+                              {amenity.name}
+                            </span>
+                          </div>
+                        )
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -308,6 +332,13 @@ const RoomDetailPage = () => {
 
               {activeTab === "reviews" && (
                 <div className="space-y-6">
+                  {/* Add Review Form */}
+                  <ReviewForm
+                    propertyId={roomId}
+                    propertyType="room"
+                    onReviewAdded={fetchRoom}
+                  />
+
                   {/* Reviews */}
                   <Card className="bg-gradient-to-br from-white to-gray-50 border-0 shadow-lg">
                     <CardHeader>
@@ -319,19 +350,76 @@ const RoomDetailPage = () => {
                             reviews)
                           </span>
                         </CardTitle>
-                        <Button
-                          variant="outline"
-                          className="border-2 border-amber-500 text-amber-600 hover:bg-amber-500 hover:text-white rounded-xl"
-                        >
-                          View all reviews
-                        </Button>
                       </div>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-8">
-                        <div className="text-center py-8">
-                          <p className="text-gray-500">No reviews available yet.</p>
-                        </div>
+                        {room?.reviews && room.reviews.length > 0 ? (
+                          room.reviews.map((review) => (
+                            <div
+                              key={review._id}
+                              className="border-b border-gray-200 pb-6 last:border-b-0"
+                            >
+                              <div className="flex items-start space-x-4">
+                                {/* Profile Image */}
+                                <div className="flex-shrink-0">
+                                  {review.reviewer.profileImage ? (
+                                    <Image
+                                      width={40}
+                                      height={40}
+                                      src={review.reviewer.profileImage}
+                                      alt={`${review.reviewer.fname} ${review.reviewer.lname}`}
+                                      className="w-10 h-10 rounded-full object-cover"
+                                    />
+                                  ) : (
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 flex items-center justify-center text-white font-semibold text-sm">
+                                      {review.reviewer.fname.charAt(0)}
+                                      {review.reviewer.lname.charAt(0)}
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className="flex-1">
+                                  <div className="flex items-center space-x-2 mb-2">
+                                    <span className="font-semibold text-gray-900">
+                                      {review.reviewer.fname}{" "}
+                                      {review.reviewer.lname}
+                                    </span>
+                                    <div className="flex items-center">
+                                      {[...Array(5)].map((_, i) => (
+                                        <Star
+                                          key={i}
+                                          className={`h-4 w-4 ${
+                                            i < review.rating
+                                              ? "fill-amber-400 text-amber-400"
+                                              : "text-gray-300"
+                                          }`}
+                                        />
+                                      ))}
+                                    </div>
+                                  </div>
+
+                                  <div className="flex justify-between items-start">
+                                    <p className="text-gray-700 flex-1 mr-4">
+                                      {review.comment}
+                                    </p>
+                                    <p className="text-xs text-gray-500 flex-shrink-0">
+                                      {new Date(
+                                        review.createdAt
+                                      ).toLocaleDateString()}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center py-8">
+                            <p className="text-gray-500">
+                              No reviews available yet.
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -342,7 +430,7 @@ const RoomDetailPage = () => {
 
           {/* Booking Sidebar */}
           <div className="lg:col-span-1">
-            <OwnerProfileCard />
+            <OwnerProfileCard ownerId={room?.owner?._id || ""} />
           </div>
         </div>
       </div>
