@@ -1,6 +1,7 @@
 export type UserRole = "renter" | "owner" | "admin"
 
 export interface User {
+  _id?: string
   customId: string
   fname: string
   lname: string
@@ -40,6 +41,7 @@ export interface User {
 export interface LoginPayload {
   email: string
   password: string
+  role?: string
 }
 
 export interface SignupPayload {
