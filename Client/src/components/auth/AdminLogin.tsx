@@ -17,6 +17,7 @@ import { Alert, AlertDescription } from "@/components/base/ui/alert";
 import { AdminLoginFormValues } from "@/types/form";
 import AdminLoginForm from "@/components/admin/forms/AdminLoginForm";
 import { adminLogin } from "@/services/authService";
+import { setCookie } from "@/lib/cookies";
 
 
 
@@ -29,7 +30,11 @@ export const AdminLoginPage = () => {
     try {
       const response = await adminLogin(values);
       toast.success("Admin login successful!");
-      localStorage.setItem("token", response?.data?.token);
+      setCookie("token", response?.data?.token || '', 7);
+      if (response?.data?.user?._id) {
+        setCookie("userId", response.data.user._id, 7);
+      }
+      setCookie("userRole", "admin", 7);
       actions.resetForm();
       // Redirect to admin dashboard
       window.location.href = "/admin";

@@ -28,6 +28,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { login } from "@/services/authService";
+import { setCookie } from "@/lib/cookies";
 
 // Validation Schema
 const LoginSchema = Yup.object().shape({
@@ -63,11 +64,18 @@ export default function UnifiedLoginPage() {
     try {
       const loginData = {
         email: values.email,
-        password: values.password
+        password: values.password,
+        role: values.userType
       };
       const response = await login(loginData);
       toast.success("Login successful!");
-      localStorage.setItem("token", response?.data?.token);
+      setCookie("token", response?.data?.token || '', 7);
+      if (response?.data?.user?._id) {
+        setCookie("userId", response.data.user._id, 7);
+      }
+      if (response?.data?.user?.role) {
+        setCookie("userRole", response.data.user.role, 7);
+      }
       
       // Redirect based on user role
       if (response?.data?.user?.role === "owner") {

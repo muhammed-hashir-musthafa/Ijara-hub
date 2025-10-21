@@ -17,6 +17,7 @@ import { Sparkles, UserPlus, User } from "lucide-react";
 import { SignupFormValues } from "@/types/form";
 import RenterSignupForm from "@/components/renter/forms/RenterSignupForm";
 import { renterSignup } from "@/services/authService";
+import { setCookie } from "@/lib/cookies";
 
 const RenterSignupPage = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -38,7 +39,11 @@ const RenterSignupPage = () => {
       };
       const response = await renterSignup(signupData);
       toast.success("Account created successfully!");
-      localStorage.setItem("token", response?.data?.token);
+      setCookie("token", response?.data?.token || '', 7);
+      if (response?.data?.user?._id) {
+        setCookie("userId", response.data.user._id, 7);
+      }
+      setCookie("userRole", "renter", 7);
       actions.resetForm();
       // Redirect to dashboard or home
       window.location.href = "/";

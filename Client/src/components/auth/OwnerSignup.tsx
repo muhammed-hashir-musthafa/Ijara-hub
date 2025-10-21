@@ -17,6 +17,7 @@ import { Building2, Sparkles } from "lucide-react";
 import { OwnerSignupFormValues } from "@/types/form";
 import OwnerSignupForm from "@/components/owner/forms/OwnerSignupForm";
 import { ownerSignup } from "@/services/authService";
+import { setCookie } from "@/lib/cookies";
 
 const OwnerSignupPage = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -38,7 +39,11 @@ const OwnerSignupPage = () => {
       };
       const response = await ownerSignup(signupData);
       toast.success("Account created successfully!");
-      localStorage.setItem("token", response?.data?.token);
+      setCookie("token", response?.data?.token || '', 7);
+      if (response?.data?.user?._id) {
+        setCookie("userId", response.data.user._id, 7);
+      }
+      setCookie("userRole", "owner", 7);
       actions.resetForm();
       // Redirect to owner dashboard
       window.location.href = "/owner";
