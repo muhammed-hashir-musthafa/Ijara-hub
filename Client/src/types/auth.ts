@@ -52,6 +52,23 @@ export interface SignupPayload {
   phone: string
   gender: 'male' | 'female' | 'other'
   age: number
+  address?: {
+    street?: string
+    city?: string
+    emirate?: string
+    zipCode?: string
+  }
+  companyDetails?: {
+    companyName: string
+    companyAddress: {
+      place: string
+      pincode: number
+    }
+    companyEmail: string
+    companyPhone: number
+    since: number
+    bio: string
+  }
 }
 
 export interface AdminLoginPayload {

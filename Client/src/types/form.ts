@@ -14,6 +14,8 @@ export interface SignupFormValues {
   phoneNumber: string;
   gender: "male" | "female" | "other";
   age: string;
+  city: string;
+  emirate: string;
   password: string;
   confirmPassword: string;
   agreeToTerms: boolean;
