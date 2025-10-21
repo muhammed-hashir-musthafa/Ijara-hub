@@ -1,6 +1,7 @@
 import api from "../lib/api";
 import { Room } from "../types/room";
 import { Car } from "../types/car";
+import { Review } from "../types/review";
 
 export interface DashboardStats {
   totalProperties: number;
@@ -12,24 +13,33 @@ export const getOwnerDashboardStats = async (
   ownerId: string
 ): Promise<DashboardStats> => {
   try {
-    // Fetch owner's rooms and cars
+    // Fetch owner's rooms and cars with populated reviews
     const [roomsResponse, carsResponse] = await Promise.all([
       api.get(`/rooms?owner=${ownerId}&limit=1000`),
       api.get(`/cars?owner=${ownerId}&limit=1000`),
     ]);
+    
     const rooms: Room[] = roomsResponse.data?.data?.rooms || [];
     const cars: Car[] = carsResponse.data?.data?.cars || [];
     const totalProperties = rooms.length + cars.length;
     
-    // console.log(cars, "asoijd", rooms)
     // Calculate total reviews and average rating
     let totalReviews = 0;
     let totalRatingSum = 0;
 
     [...rooms, ...cars].forEach((property: Room | Car) => {
-      if (property.reviewCount) {
-        totalReviews += property.reviewCount;
-        totalRatingSum += (property.averageRating || 0) * property.reviewCount;
+      // Check if reviews exist and are populated
+      if (property.reviews && Array.isArray(property.reviews)) {
+        const reviewCount = property.reviews.length;
+        totalReviews += reviewCount;
+        
+        // Calculate rating sum for this property
+        if (reviewCount > 0) {
+          const propertyRatingSum = property.reviews.reduce((sum: number, review: Review) => {
+            return sum + (review.rating || 0);
+          }, 0);
+          totalRatingSum += propertyRatingSum;
+        }
       }
     });
 

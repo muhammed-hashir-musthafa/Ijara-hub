@@ -130,6 +130,25 @@ const RoomSchema = new mongoose.Schema<IRoom, RoomModel, IRoomMethods>(
   }
 );
 
+// Virtual for review count
+RoomSchema.virtual('reviewCount').get(function() {
+  return this.reviews ? this.reviews.length : 0;
+});
+
+// Virtual for average rating
+RoomSchema.virtual('averageRating').get(function() {
+  if (!this.reviews || this.reviews.length === 0) return 0;
+  
+  // Check if reviews are populated objects (not just ObjectIds)
+  if (this.reviews[0] && typeof this.reviews[0] === 'object' && 'rating' in this.reviews[0]) {
+    const populatedReviews = this.reviews as unknown as { rating?: number }[];
+    const totalRating = populatedReviews.reduce((sum: number, review: { rating?: number }) => sum + (review.rating || 0), 0);
+    return Math.round((totalRating / populatedReviews.length) * 10) / 10;
+  }
+  
+  return 0;
+});
+
 // Indexes
 RoomSchema.index({ roomNumber: 1 }, { unique: true });
 RoomSchema.index({ category: 1 });

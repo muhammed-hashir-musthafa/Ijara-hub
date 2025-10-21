@@ -44,6 +44,7 @@ export default function OwnerDashboard() {
         
         setUser(userResponse?.data?.user);
         setDashboardData(dashboardStats);
+        console.log(dashboardStats, "dashboard stats");
       } catch (error) {
         console.error('Failed to fetch dashboard data:', error);
       } finally {
