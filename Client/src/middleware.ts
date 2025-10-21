@@ -25,7 +25,7 @@ const middlewareConfig = {
     "/owner/signup",
     "/admin/login",
   ],
-  roleRoutes: {
+  protectedRoutes: {
     "/admin": ["admin"] as UserRole[],
     "/owner": ["owner", "admin"] as UserRole[],
     "/profile": ["renter", "owner", "admin"] as UserRole[],
@@ -42,8 +42,8 @@ async function verifyToken(token: string) {
       process.env.JWT_SECRET || "fallback-secret"
     );
     const { payload } = await jwtVerify(token, secret);
-    console.log(payload, "payload");
-    console.log("JWT verification successful", secret);
+    // console.log(payload, "payload");
+    // console.log("JWT verification successful", secret);
     return payload as {
       id: string;
       email: string;
@@ -80,17 +80,26 @@ function checkRateLimit(ip: string): boolean {
 
 // RBAC check
 /**
+ * Check if route is protected and requires authentication
+ */
+function isProtectedRoute(pathname: string): boolean {
+  return Object.keys(middlewareConfig.protectedRoutes).some(route => 
+    pathname.startsWith(route)
+  );
+}
+
+/**
  * RBAC - checks if user role has access to route
  */
-function hasAccess(pathname: string, userRole?: UserRole): boolean {
+function hasAccess(pathname: string, userRole: UserRole): boolean {
   for (const [route, allowedRoles] of Object.entries(
-    middlewareConfig.roleRoutes
+    middlewareConfig.protectedRoutes
   )) {
     if (pathname.startsWith(route)) {
-      return userRole ? allowedRoles.includes(userRole) : false;
+      return allowedRoles.includes(userRole);
     }
   }
-  return true;
+  return false;
 }
 
 /**
@@ -102,8 +111,8 @@ export async function middleware(request: NextRequest) {
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     request.headers.get("x-real-ip") ||
     "unknown";
-  console.log("ip", ip);
-  console.log(pathname, "pathname");
+  // console.log("ip", ip);
+  // console.log(pathname, "pathname");
 
   // Rate limiting
   if (!checkRateLimit(ip)) {
@@ -113,36 +122,47 @@ export async function middleware(request: NextRequest) {
     });
   }
 
-  // Public routes
-  if (
-    middlewareConfig.publicRoutes.some(
-      (route) => pathname === route || pathname.startsWith(route)
-    )
-  ) {
+  // Check for public routes (including dynamic routes)
+  const isPublic = middlewareConfig.publicRoutes.some(
+    (route) => pathname === route || pathname.startsWith(route)
+  );
+  
+  // Special handling for dynamic routes
+  const isDynamicPublicRoute = 
+    pathname.startsWith('/rooms/') || 
+    pathname.startsWith('/cars/');
+  
+  if (isPublic || isDynamicPublicRoute) {
     return NextResponse.next();
   }
 
-  // JWT Authentication
+  // Check if route requires authentication
+  const requiresAuth = isProtectedRoute(pathname);
+  
+  if (!requiresAuth) {
+    return NextResponse.next();
+  }
+
+  // JWT Authentication for protected routes
   const token = request.cookies.get("token")?.value;
-  console.log("token", token);
+  // console.log("token", token);
+  
   if (!token) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
   const user = await verifyToken(token);
-  console.log(user, "user");
+  // console.log(user, "user");
+  
   if (!user) {
     const response = NextResponse.redirect(new URL("/login", request.url));
     response.cookies.delete("token");
     return response;
   }
 
-  // RBAC
+  // RBAC - check if user has access to this protected route
   if (!hasAccess(pathname, user.role)) {
-    return new NextResponse(JSON.stringify({ error: "Access denied" }), {
-      status: 403,
-      headers: { "Content-Type": "application/json" },
-    });
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   // Success
