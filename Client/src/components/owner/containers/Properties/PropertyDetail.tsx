@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import toast from "react-hot-toast";
 import { AxiosError } from "axios";
 import { Button } from "@/components/base/ui/button";
 import {
@@ -25,8 +24,6 @@ import {
   Tv,
   Share2,
   Home,
-  TrendingUp,
-  Award,
   ChevronRight,
   Sparkles,
   Globe,
@@ -34,58 +31,13 @@ import {
   Coffee,
   BookOpen,
   Camera,
+  MessageSquare,
 } from "lucide-react";
 import Image from "next/image";
 import { PropertyStatus, Property, PropertyCategory } from "@/types/owner";
 import EditPropertyModal from "./EditPropertyModal";
 import { getRoomById } from "@/services/roomService";
 import { getCarById } from "@/services/carService";
-
-// Mock property data
-const mockProperty: Property = {
-  id: "1",
-  title: "Luxury Suite - Dubai Marina",
-  type: "room" as const,
-  category: "luxury" as PropertyCategory,
-  location: "Dubai Marina",
-  price: 850,
-  currency: "AED",
-  status: "active" as const,
-  description:
-    "Experience unparalleled luxury in this stunning suite overlooking Dubai Marina. Features premium amenities, breathtaking views, and world-class service. This exceptional property offers a perfect blend of modern sophistication and traditional Arabian hospitality, making it an ideal choice for discerning guests seeking the ultimate in comfort and elegance.",
-  images: [
-    "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=1200&h=800&fit=crop",
-    "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1200&h=800&fit=crop",
-    "https://images.unsplash.com/photo-1521783988139-89397d761dce?w=1200&h=800&fit=crop",
-    "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1200&h=800&fit=crop",
-  ],
-  amenities: ["wifi", "parking", "kitchen", "tv", "ac", "coffee"],
-  rating: 4.9,
-  reviewCount: 127,
-  bookings: 24,
-  revenue: 18500,
-  bedrooms: "2",
-  bathrooms: "2",
-  area: "1200",
-  createdAt: "2024-01-15",
-  lastUpdated: "2024-02-15",
-  guests: 4,
-  owner: {
-    id: "owner1",
-    name: "Ahmed Al Mansouri",
-    avatar:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop",
-    rating: 4.8,
-    reviewCount: 156,
-    properties: 12,
-    responseTime: "Within 1 hour",
-    joinedYear: "2019",
-    verified: true,
-    languages: ["English", "Arabic", "French"],
-    about:
-      "Hospitality professional with over 10 years of experience in luxury property management in Dubai.",
-  },
-};
 
 export default function PropertyDetailsPage() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -97,7 +49,7 @@ export default function PropertyDetailsPage() {
 
   const fetchProperty = useCallback(async () => {
     if (!propertyId) return;
-    
+
     try {
       setIsLoading(true);
       // Try to fetch as room first, then as car
@@ -108,26 +60,47 @@ export default function PropertyDetailsPage() {
         propertyData = {
           id: room._id,
           title: room.title,
-          type: 'room',
+          type: "room",
           category: room.category as PropertyCategory,
-          location: room.location,
+          address: {
+            place: room.address?.place || "Dubai",
+            pincode: room.address?.pincode,
+          },
           price: room.pricePerNight,
-          currency: 'AED',
+          currency: "AED",
           status: room.status as PropertyStatus,
-          description: room.description || '',
-          images: room.images.length > 0 ? room.images : ['/placeholder-room.jpg'],
+          description: room.description || "",
+          images:
+            room.images.length > 0 ? room.images : ["/placeholder-room.jpg"],
           amenities: room.amenities,
-          rating: 4.5,
-          reviewCount: 0,
+          rating: room.averageRating || 0,
+          reviewCount: room.reviewCount || 0,
           bookings: 0,
           revenue: 0,
           bedrooms: room.rooms.bedroom.toString(),
           bathrooms: room.rooms.bathroom.toString(),
-          area: room.areaSqft?.toString() || '0',
-          createdAt: new Date(room.createdAt).toISOString().split('T')[0],
-          lastUpdated: new Date(room.updatedAt).toISOString().split('T')[0],
+          area: room.areaSqft?.toString() || "0",
+          createdAt: new Date(room.createdAt).toISOString().split("T")[0],
+          lastUpdated: new Date(room.updatedAt).toISOString().split("T")[0],
           guests: room.capacity,
-          owner: mockProperty.owner
+          // Room specific fields
+          roomNumber: room.roomNumber,
+          roomType: room.type,
+          floor: room.floor,
+          pincode: room.address?.pincode,
+          owner: {
+            id: room.owner._id,
+            name: `${room.owner.fname} ${room.owner.lname}`,
+            avatar: "",
+            rating: 0,
+            reviewCount: 0,
+            properties: 0,
+            responseTime: "Within 1 hour",
+            joinedYear: new Date(room.createdAt).getFullYear().toString(),
+            verified: true,
+            languages: ["English", "Arabic"],
+            about: "Property owner",
+          },
         };
       } catch {
         // If room fetch fails, try car
@@ -136,35 +109,60 @@ export default function PropertyDetailsPage() {
         propertyData = {
           id: car._id,
           title: car.title,
-          type: 'car',
+          type: "car",
           category: car.category as PropertyCategory,
-          location: car.location,
+          address: {
+            place: car.address?.place || "Dubai",
+            pincode: car.address?.pincode,
+          },
           price: car.dailyRate,
-          currency: 'AED',
+          currency: "AED",
           status: car.status as PropertyStatus,
-          description: car.description || '',
-          images: car.images.length > 0 ? car.images : ['/placeholder-car.jpg'],
+          description: car.description || "",
+          images: car.images.length > 0 ? car.images : ["/placeholder-car.jpg"],
           amenities: car.amenities,
-          rating: 4.5,
-          reviewCount: 0,
+          rating: car.averageRating || 0,
+          reviewCount: car.reviewCount || 0,
           bookings: 0,
           revenue: 0,
-          createdAt: new Date(car.createdAt).toISOString().split('T')[0],
-          lastUpdated: new Date(car.updatedAt).toISOString().split('T')[0],
+          createdAt: new Date(car.createdAt).toISOString().split("T")[0],
+          lastUpdated: new Date(car.updatedAt).toISOString().split("T")[0],
           passengers: car.seatingCapacity,
-          owner: mockProperty.owner
+          // Car specific fields
+          brand: car.brand,
+          model: car.model,
+          year: car.year,
+          licensePlate: car.licensePlate,
+          fuelType: car.fuelType,
+          transmission: car.transmission,
+          color: car.color,
+          pincode: car.address?.pincode,
+          owner: {
+            id: car.owner._id,
+            name: `${car.owner.fname} ${car.owner.lname}`,
+            avatar: "",
+            rating: 0,
+            reviewCount: 0,
+            properties: 0,
+            responseTime: "Within 1 hour",
+            joinedYear: new Date(car.createdAt).getFullYear().toString(),
+            verified: true,
+            languages: ["English", "Arabic"],
+            about: "Property owner",
+          },
         };
       }
       setProperty(propertyData);
     } catch (error: unknown) {
       if (error instanceof AxiosError) {
-        toast.error(error.response?.data?.message || 'Failed to load property details.');
+        console.error(
+          error.response?.data?.message || "Failed to load property details."
+        );
       } else {
-        toast.error('Failed to load property details.');
+        console.error("Failed to load property details.");
       }
-      console.error('Error fetching property:', error);
-      // Fallback to mock data
-      setProperty(mockProperty);
+      console.error("Error fetching property:", error);
+      setProperty(null);
     } finally {
       setIsLoading(false);
     }
@@ -194,7 +192,10 @@ export default function PropertyDetailsPage() {
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-600">Property not found.</p>
-          <Link href="/owner/properties" className="text-amber-600 hover:text-amber-700 mt-2 inline-block">
+          <Link
+            href="/owner/properties"
+            className="text-amber-600 hover:text-amber-700 mt-2 inline-block"
+          >
             Back to Properties
           </Link>
         </div>
@@ -206,9 +207,11 @@ export default function PropertyDetailsPage() {
     const shareUrl = `${window.location.origin}/rooms/${property.id}`;
     const shareData = {
       title: property.title,
-      text: `Check out this ${property.type} in ${property.location} - ${
-        property.currency
-      } ${property.price}/${property.type === "room" ? "night" : "day"}`,
+      text: `Check out this ${property.type} in ${
+        property.address?.place || "Dubai"
+      } - ${property.currency} ${property.price}/${
+        property.type === "room" ? "night" : "day"
+      }`,
       url: shareUrl,
     };
 
@@ -306,7 +309,9 @@ export default function PropertyDetailsPage() {
               <div className="flex flex-wrap items-center gap-4 text-gray-600">
                 <div className="flex items-center gap-1">
                   <MapPin className="h-4 w-4 text-amber-500" />
-                  <span className="font-medium">{property.location}</span>
+                  <span className="font-medium">
+                    {property.address?.place || "Dubai"}
+                  </span>
                 </div>
                 <span className="hidden sm:inline w-1 h-1 bg-gray-400 rounded-full"></span>
                 <span className="capitalize font-medium text-amber-600">
@@ -335,36 +340,40 @@ export default function PropertyDetailsPage() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
             {[
               {
                 icon: Star,
-                label: "Rating",
-                value: property.rating,
-                suffix: `/5 (${property.reviewCount})`,
+                label: "Average Rating",
+                value: property.rating ? property.rating.toFixed(1) : "0.0",
+                suffix: "/5.0",
                 color: "text-amber-600",
               },
               {
-                icon: Calendar,
-                label: "Total Bookings",
-                value: property.bookings,
-                suffix: " bookings",
+                icon: MessageSquare,
+                label: "Total Reviews",
+                value: property.reviewCount || 0,
+                suffix: "reviews",
                 color: "text-blue-600",
               },
               {
-                icon: TrendingUp,
-                label: "Total Revenue",
-                value: `${
-                  property.currency
-                } ${property.revenue.toLocaleString()}`,
-                suffix: "",
-                color: "text-emerald-600",
+                icon: property.type === "room" ? Home : Car,
+                label: property.type === "room" ? "Capacity" : "Passengers",
+                value:
+                  property.type === "room"
+                    ? property.guests
+                    : property.passengers,
+                suffix: property.type === "room" ? "guests" : "seats",
+                color: "text-green-600",
               },
               {
-                icon: Award,
-                label: "Occupancy Rate",
-                value: "87",
-                suffix: "%",
+                icon: Calendar,
+                label: "Listed Since",
+                value: new Date(property.createdAt).toLocaleDateString(
+                  "en-US",
+                  { month: "short", year: "numeric" }
+                ),
+                suffix: "",
                 color: "text-purple-600",
               },
             ].map((stat, index) => (
@@ -382,7 +391,9 @@ export default function PropertyDetailsPage() {
                   <div
                     className={`text-xl sm:text-2xl font-bold ${stat.color} mb-1`}
                   >
-                    {stat.value}
+                    {typeof stat.value === "number"
+                      ? stat.value.toLocaleString()
+                      : stat.value}
                   </div>
                   <div className="text-sm sm:text-base text-gray-500 font-medium">
                     {stat.label}
@@ -396,6 +407,121 @@ export default function PropertyDetailsPage() {
               </Card>
             ))}
           </div>
+
+          {/* Property Details */}
+          {property.type === "room" && (
+            <Card className="border-0 shadow-xl bg-gradient-to-r from-amber-50 to-orange-50 animate-fade-in-up animation-delay-600 mt-5">
+              <CardHeader>
+                <CardTitle className="flex items-center text-xl">
+                  <Home className="h-5 w-5 mr-2 text-amber-500" />
+                  Room Details
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-amber-600 mb-1">
+                      {property.roomNumber}
+                    </div>
+                    <div className="text-sm text-gray-600">Room No.</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-amber-600 mb-1 capitalize">
+                      {property.roomType}
+                    </div>
+                    <div className="text-sm text-gray-600">Type</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-amber-600 mb-1">
+                      {property.bedrooms}
+                    </div>
+                    <div className="text-sm text-gray-600">Bedrooms</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-amber-600 mb-1">
+                      {property.bathrooms}
+                    </div>
+                    <div className="text-sm text-gray-600">Bathrooms</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-amber-600 mb-1">
+                      {property.area}
+                    </div>
+                    <div className="text-sm text-gray-600">Sq Ft</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-amber-600 mb-1">
+                      Floor {property.floor}
+                    </div>
+                    <div className="text-sm text-gray-600">Floor</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {property.type === "car" && (
+            <Card className="border-0 shadow-xl bg-gradient-to-r from-amber-50 to-orange-50 animate-fade-in-up animation-delay-600 mt-5">
+              <CardHeader>
+                <CardTitle className="flex items-center text-xl">
+                  <Car className="h-5 w-5 mr-2 text-amber-500" />
+                  Vehicle Details
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-amber-600 mb-1">
+                      {property.brand} {property.model}
+                    </div>
+                    <div className="text-sm text-gray-600">Make & Model</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-amber-600 mb-1">
+                      {property.year}
+                    </div>
+                    <div className="text-sm text-gray-600">Year</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-amber-600 mb-1">
+                      {property.licensePlate}
+                    </div>
+                    <div className="text-sm text-gray-600">License Plate</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-amber-600 mb-1 capitalize">
+                      {property.fuelType}
+                    </div>
+                    <div className="text-sm text-gray-600">Fuel Type</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-amber-600 mb-1 capitalize">
+                      {property.transmission}
+                    </div>
+                    <div className="text-sm text-gray-600">Transmission</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-amber-600 mb-1 capitalize">
+                      {property.color}
+                    </div>
+                    <div className="text-sm text-gray-600">Color</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-amber-600 mb-1">
+                      {property.passengers}
+                    </div>
+                    <div className="text-sm text-gray-600">Passengers</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-amber-600 mb-1 capitalize">
+                      {property.category}
+                    </div>
+                    <div className="text-sm text-gray-600">Category</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         <div className="space-y-6">
@@ -541,6 +667,28 @@ export default function PropertyDetailsPage() {
                     <>
                       <div className="flex justify-between items-center p-3 rounded-lg bg-gray-50">
                         <span className="text-gray-600 font-medium">
+                          Room Number
+                        </span>
+                        <span className="font-bold text-gray-900">
+                          {property.roomNumber}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center p-3 rounded-lg bg-gray-50">
+                        <span className="text-gray-600 font-medium">
+                          Room Type
+                        </span>
+                        <span className="font-bold text-gray-900 capitalize">
+                          {property.roomType}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center p-3 rounded-lg bg-gray-50">
+                        <span className="text-gray-600 font-medium">Floor</span>
+                        <span className="font-bold text-gray-900">
+                          {property.floor}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center p-3 rounded-lg bg-gray-50">
+                        <span className="text-gray-600 font-medium">
                           Bedrooms
                         </span>
                         <span className="font-bold text-gray-900">
@@ -569,6 +717,82 @@ export default function PropertyDetailsPage() {
                           {property.guests}
                         </span>
                       </div>
+                      {property.pincode && (
+                        <div className="flex justify-between items-center p-3 rounded-lg bg-gray-50">
+                          <span className="text-gray-600 font-medium">
+                            Pincode
+                          </span>
+                          <span className="font-bold text-gray-900">
+                            {property.pincode}
+                          </span>
+                        </div>
+                      )}
+                    </>
+                  )}
+                  {property.type === "car" && (
+                    <>
+                      <div className="flex justify-between items-center p-3 rounded-lg bg-gray-50">
+                        <span className="text-gray-600 font-medium">
+                          Make & Model
+                        </span>
+                        <span className="font-bold text-gray-900">
+                          {property.brand} {property.model}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center p-3 rounded-lg bg-gray-50">
+                        <span className="text-gray-600 font-medium">Year</span>
+                        <span className="font-bold text-gray-900">
+                          {property.year}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center p-3 rounded-lg bg-gray-50">
+                        <span className="text-gray-600 font-medium">
+                          License Plate
+                        </span>
+                        <span className="font-bold text-gray-900">
+                          {property.licensePlate}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center p-3 rounded-lg bg-gray-50">
+                        <span className="text-gray-600 font-medium">
+                          Fuel Type
+                        </span>
+                        <span className="font-bold text-gray-900 capitalize">
+                          {property.fuelType}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center p-3 rounded-lg bg-gray-50">
+                        <span className="text-gray-600 font-medium">
+                          Transmission
+                        </span>
+                        <span className="font-bold text-gray-900 capitalize">
+                          {property.transmission}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center p-3 rounded-lg bg-gray-50">
+                        <span className="text-gray-600 font-medium">Color</span>
+                        <span className="font-bold text-gray-900 capitalize">
+                          {property.color}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center p-3 rounded-lg bg-gray-50">
+                        <span className="text-gray-600 font-medium">
+                          Seating Capacity
+                        </span>
+                        <span className="font-bold text-gray-900">
+                          {property.passengers}
+                        </span>
+                      </div>
+                      {property.pincode && (
+                        <div className="flex justify-between items-center p-3 rounded-lg bg-gray-50">
+                          <span className="text-gray-600 font-medium">
+                            Pincode
+                          </span>
+                          <span className="font-bold text-gray-900">
+                            {property.pincode}
+                          </span>
+                        </div>
+                      )}
                     </>
                   )}
                   <Separator />
@@ -583,7 +807,9 @@ export default function PropertyDetailsPage() {
                       Last Updated
                     </span>
                     <span className="font-bold text-gray-900">
-                      {property.lastUpdated ? new Date(property.lastUpdated).toLocaleDateString() : 'N/A'}
+                      {property.lastUpdated
+                        ? new Date(property.lastUpdated).toLocaleDateString()
+                        : "N/A"}
                     </span>
                   </div>
                 </CardContent>

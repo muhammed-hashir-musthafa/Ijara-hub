@@ -52,81 +52,130 @@ export default function PropertiesPage() {
   });
   const [properties, setProperties] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [availableLocations, setAvailableLocations] = useState<string[]>([]);
 
   const fetchProperties = async () => {
     try {
       setIsLoading(true);
       const [roomsResponse, carsResponse] = await Promise.all([
-        getRooms({ status: 'active' }),
-        getCars({ status: 'active' })
+        getRooms({ status: "active" }),
+        getCars({ status: "active" }),
       ]);
 
-      const mapRoomCategory = (category: string): 'luxury' | 'premium' | 'standard' | 'economy' => {
-        const categoryMap: Record<string, 'luxury' | 'premium' | 'standard' | 'economy'> = {
-          'hotel': 'luxury',
-          'apartment': 'premium', 
-          'villa': 'luxury',
-          'studio': 'standard',
-          'penthouse': 'luxury'
+      // Dynamic category mapping based on model enums
+      const ROOM_CATEGORIES = ["hotel", "apartment", "villa", "studio", "penthouse"];
+      const CAR_CATEGORIES = ["economy", "compact", "midsize", "luxury", "suv", "sports"];
+      
+      const mapRoomCategory = (
+        category: string
+      ): "luxury" | "premium" | "standard" | "economy" => {
+        const categoryMap: Record<
+          string,
+          "luxury" | "premium" | "standard" | "economy"
+        > = {
+          hotel: "luxury",
+          apartment: "premium",
+          villa: "luxury",
+          studio: "standard",
+          penthouse: "luxury",
         };
-        return categoryMap[category] || 'standard';
+        return ROOM_CATEGORIES.includes(category) ? categoryMap[category] || "standard" : "standard";
       };
 
-      const mapCarCategory = (category: string): 'luxury' | 'premium' | 'standard' | 'economy' => {
-        const categoryMap: Record<string, 'luxury' | 'premium' | 'standard' | 'economy'> = {
-          'economy': 'economy',
-          'compact': 'standard',
-          'midsize': 'standard', 
-          'luxury': 'luxury',
-          'suv': 'premium',
-          'sports': 'luxury',
-          'convertible': 'luxury'
+      const mapCarCategory = (
+        category: string
+      ): "luxury" | "premium" | "standard" | "economy" => {
+        const categoryMap: Record<
+          string,
+          "luxury" | "premium" | "standard" | "economy"
+        > = {
+          economy: "economy",
+          compact: "standard",
+          midsize: "standard",
+          luxury: "luxury",
+          suv: "premium",
+          sports: "luxury",
         };
-        return categoryMap[category] || 'standard';
+        return CAR_CATEGORIES.includes(category) ? categoryMap[category] || "standard" : "standard";
       };
 
-      const roomProperties: Property[] = roomsResponse?.data?.rooms?.map(room => ({
-        id: room._id,
-        title: room.title,
-        type: 'room',
-        category: mapRoomCategory(room.category),
-        location: room.location,
-        price: room.pricePerNight,
-        currency: 'AED',
-        status: room.status as PropertyStatus,
-        images: room.images.length > 0 ? room.images : ['/placeholder-room.jpg'],
-        rating: 4.5,
-        reviewCount: 0,
-        bookings: 0,
-        revenue: 0,
-        createdAt: new Date(room.createdAt).toISOString().split('T')[0],
-        amenities: room.amenities,
-        guests: room.capacity
-      }));
+      const roomProperties: Property[] = roomsResponse?.data?.rooms?.map(
+        (room) => {
+          const reviews = room.reviews || [];
+          const reviewCount = reviews.length;
+          const rating = reviewCount > 0 
+            ? reviews.reduce((sum: number, review: { rating?: number }) => sum + (review.rating || 0), 0) / reviewCount
+            : 0;
+          
+          return {
+            id: room._id,
+            title: room.title,
+            type: "room",
+            category: mapRoomCategory(room.category),
+            address: {
+              place: room.address?.place,
+              pincode: room.address?.pincode,
+            },
+            price: room.pricePerNight,
+            currency: "AED",
+            status: room.status as PropertyStatus,
+            images:
+              room.images.length > 0 ? room.images : ["/placeholder-room.jpg"],
+            rating: Math.round(rating * 10) / 10,
+            reviewCount,
+            createdAt: new Date(room.createdAt).toISOString().split("T")[0],
+            amenities: room.amenities,
+            guests: room.capacity,
+          };
+        }
+      );
 
-      const carProperties: Property[] = carsResponse?.data?.cars?.map(car => ({
-        id: car._id,
-        title: car.title,
-        type: 'car',
-        category: mapCarCategory(car.category),
-        location: car.location,
-        price: car.dailyRate,
-        currency: 'AED',
-        status: car.status as PropertyStatus,
-        images: car.images.length > 0 ? car.images : ['/placeholder-car.jpg'],
-        rating: 4.5,
-        reviewCount: 0,
-        bookings: 0,
-        revenue: 0,
-        createdAt: new Date(car.createdAt).toISOString().split('T')[0],
-        amenities: car.amenities,
-        passengers: car.seatingCapacity
-      }));
+      const carProperties: Property[] = carsResponse?.data?.cars?.map(
+        (car) => {
+          const reviews = car.reviews || [];
+          const reviewCount = reviews.length;
+          const rating = reviewCount > 0 
+            ? reviews.reduce((sum: number, review: { rating?: number }) => sum + (review.rating || 0), 0) / reviewCount
+            : 0;
+          
+          return {
+            id: car._id,
+            title: car.title,
+            type: "car",
+            category: mapCarCategory(car.category),
+            address: {
+              place: car.address?.place,
+              pincode: car.address?.pincode,
+            },
+            price: car.dailyRate,
+            currency: "AED",
+            status: car.status as PropertyStatus,
+            images: car.images.length > 0 ? car.images : ["/placeholder-car.jpg"],
+            rating: Math.round(rating * 10) / 10,
+            reviewCount,
+            createdAt: new Date(car.createdAt).toISOString().split("T")[0],
+            amenities: car.amenities,
+            passengers: car.seatingCapacity,
+          };
+        }
+      );
 
-      setProperties([...roomProperties, ...carProperties]);
+      const allProperties = [...roomProperties, ...carProperties];
+      setProperties(allProperties);
+      
+      // Extract unique locations dynamically
+      const locations = Array.from(
+        new Set(
+          allProperties
+            .map(p => p.address?.place)
+            .filter(Boolean)
+            .map(place => place!.toLowerCase().replace(/\s+/g, "-"))
+        )
+      );
+      setAvailableLocations(locations);
     } catch (error: unknown) {
-      toast.error('Failed to load properties. Please try again.');
-      console.error('Error fetching properties:', error);
+      console.error("Failed to load properties. Please try again.");
+      console.error("Error fetching properties:", error);
       setProperties([]);
     } finally {
       setIsLoading(false);
@@ -135,18 +184,20 @@ export default function PropertiesPage() {
 
   const handleDeleteProperty = async (property: Property) => {
     try {
-      if (property.type === 'room') {
+      if (property.type === "room") {
         await deleteRoom(property.id);
       } else {
         await deleteCar(property.id);
       }
-      toast.success('Property deleted successfully');
+      toast.success("Property deleted successfully");
       fetchProperties();
     } catch (error: unknown) {
       if (error instanceof AxiosError) {
-        toast.error(error.response?.data?.message || 'Failed to delete property');
+        toast.error(
+          error.response?.data?.message || "Failed to delete property"
+        );
       } else {
-        toast.error('Failed to delete property');
+        toast.error("Failed to delete property");
       }
     }
   };
@@ -159,12 +210,15 @@ export default function PropertiesPage() {
     return properties.filter((p) => {
       const matchesSearch =
         p.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-        p.location.toLowerCase().includes(filters.search.toLowerCase());
+        (p.address?.place || "")
+          .toLowerCase()
+          .includes(filters.search.toLowerCase());
       const matchesType = !filters.type || p.type === filters.type;
       const matchesStatus = !filters.status || p.status === filters.status;
       const matchesLocation =
         !filters.location ||
-        p.location.toLowerCase().replace(/\s+/g, "-") === filters.location;
+        (p.address?.place || "").toLowerCase().replace(/\s+/g, "-") ===
+          filters.location;
       const matchesCategory =
         !filters.category || p.category === filters.category;
 
@@ -193,16 +247,37 @@ export default function PropertiesPage() {
 
   const getAmenityIcon = (amenity: string) => {
     const icons: Record<string, React.ElementType> = {
+      // Room amenities
       wifi: Wifi,
-      coffee: Coffee,
       tv: Tv,
       ac: AirVent,
+      minibar: Coffee,
+      balcony: Home,
+      sea_view: Globe,
+      city_view: Globe,
+      jacuzzi: AirVent,
+      kitchen: Coffee,
+      parking: Car,
+      gym_access: Users,
+      pool_access: Users,
+      room_service: Clock,
+      laundry: Clock,
+      safe: Clock,
+      // Car amenities
       gps: Globe,
-      insurance: Clock,
-      "24/7 support": Clock,
-      chauffeur: Users,
+      bluetooth: Wifi,
+      backup_camera: Tv,
+      sunroof: Home,
+      leather_seats: Users,
+      heated_seats: AirVent,
+      cruise_control: Car,
+      keyless_entry: Clock,
+      usb_charging: Wifi,
+      wifi_hotspot: Wifi,
+      premium_audio: Tv,
+      parking_sensors: Car,
     };
-    const Icon = icons[amenity.toLowerCase()] || Globe;
+    const Icon = icons[amenity.toLowerCase().replace(/\s+/g, "_")] || Globe;
     return <Icon className="h-3 w-3" />;
   };
 
@@ -252,27 +327,30 @@ export default function PropertiesPage() {
           <h3 className="font-bold text-lg text-gray-900 line-clamp-1 group-hover:text-amber-600 transition-colors duration-300">
             {property.title}
           </h3>
-          <div className="flex items-center space-x-1 text-sm bg-amber-50 px-3 py-1 rounded-full border border-amber-100">
-            <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-            <span className="font-bold text-amber-700">{property.rating}</span>
-          </div>
+          {property.rating > 0 ? (
+            <div className="flex items-center space-x-1 text-sm bg-amber-50 px-3 py-1 rounded-full border border-amber-100">
+              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+              <span className="font-bold text-amber-700">{property.rating}</span>
+            </div>
+          ) : (
+            <div className="flex items-center space-x-1 text-sm bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
+              <Star className="h-3 w-3 text-gray-400" />
+              <span className="font-bold text-gray-500">New</span>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center text-sm text-gray-600 mb-4">
           <MapPin className="h-4 w-4 mr-2 text-amber-500" />
-          <span className="font-medium">{property.location}</span>
+          <span className="font-medium">
+            {property.address?.place || "Location not specified"}
+          </span>
           <span className="mx-2 text-gray-400">•</span>
           <span className="capitalize text-gray-500">{property.category}</span>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 mb-4 p-3 bg-gray-50/50 rounded-xl border border-gray-100">
-          <div className="text-center">
-            <div className="text-lg font-bold text-gray-900">
-              {property.bookings}
-            </div>
-            <div className="text-xs text-gray-500 font-medium">Bookings</div>
-          </div>
-          <div className="text-center border-l border-r border-gray-200">
+        <div className="grid grid-cols-2 gap-4 mb-4 p-3 bg-gray-50/50 rounded-xl border border-gray-100">
+          <div className="text-center  border-r border-gray-200">
             <div className="text-lg font-bold text-gray-900">
               {property.reviewCount}
             </div>
@@ -466,11 +544,13 @@ export default function PropertiesPage() {
                   <SelectValue placeholder="All Locations" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="dubai-marina">Dubai Marina</SelectItem>
-                  <SelectItem value="downtown-dubai">Downtown Dubai</SelectItem>
-                  <SelectItem value="business-bay">Business Bay</SelectItem>
-                  <SelectItem value="jumeirah">Jumeirah</SelectItem>
-                  <SelectItem value="deira">Deira</SelectItem>
+                  {availableLocations.map((location) => (
+                    <SelectItem key={location} value={location}>
+                      {location.split("-").map(word => 
+                        word.charAt(0).toUpperCase() + word.slice(1)
+                      ).join(" ")}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
 
