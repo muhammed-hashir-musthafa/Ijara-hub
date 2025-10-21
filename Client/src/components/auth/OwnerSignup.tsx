@@ -35,7 +35,18 @@ const OwnerSignupPage = () => {
         password: values.password,
         phone: values.phoneNumber,
         gender: values.gender,
-        age: parseInt(values.age)
+        age: parseInt(values.age),
+        companyDetails: {
+          companyName: values.businessName,
+          companyAddress: {
+            place: values.businessAddress,
+            pincode: parseInt(values.businessPincode)
+          },
+          companyEmail: values.businessEmail,
+          companyPhone: parseInt(values.businessPhone.replace(/[^0-9]/g, '')),
+          since: parseInt(values.experienceYears),
+          bio: values.bio
+        }
       };
       const response = await ownerSignup(signupData);
       toast.success("Account created successfully!");

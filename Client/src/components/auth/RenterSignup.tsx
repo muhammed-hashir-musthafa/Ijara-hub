@@ -35,7 +35,11 @@ const RenterSignupPage = () => {
         password: values.password,
         phone: values.phoneNumber,
         gender: values.gender,
-        age: parseInt(values.age)
+        age: parseInt(values.age),
+        address: {
+          city: values.city,
+          emirate: values.emirate
+        }
       };
       const response = await renterSignup(signupData);
       toast.success("Account created successfully!");
