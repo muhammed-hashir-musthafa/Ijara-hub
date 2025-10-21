@@ -14,7 +14,7 @@ export interface IRoom {
   pricePerNight: number;
   capacity: number;
   floor: number;
-  location: "dubai-marina" | "downtown-dubai" | "business-bay" | "jumeirah" | "deira" | "abu-dhabi" | "sharjah";
+
   address: {
     place?: string;
     pincode?: number;
@@ -23,6 +23,7 @@ export interface IRoom {
   images: string[];
   status: "active" | "inactive" | "pending";
   owner: mongoose.Types.ObjectId;
+  reviews: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }

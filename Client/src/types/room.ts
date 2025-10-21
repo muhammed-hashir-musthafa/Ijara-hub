@@ -1,3 +1,5 @@
+import { Review } from './review';
+
 export interface Room {
   _id: string
   roomNumber: string
@@ -13,7 +15,6 @@ export interface Room {
   pricePerNight: number
   capacity: number
   floor: number
-  location: 'dubai-marina' | 'downtown-dubai' | 'business-bay' | 'jumeirah' | 'deira' | 'abu-dhabi' | 'sharjah'
   address: {
     place?: string
     pincode?: number
@@ -21,7 +22,15 @@ export interface Room {
   amenities: string[]
   images: string[]
   status: 'active' | 'inactive' | 'pending'
-  owner: string
+  owner: {
+    _id: string
+    fname: string
+    lname: string
+    email: string
+    phone: string
+    role: string
+  }
+  reviews?: Review[]
   averageRating?: number
   reviewCount?: number
   createdAt: Date
@@ -42,7 +51,6 @@ export interface CreateRoomPayload {
   pricePerNight: number
   capacity: number
   floor: number
-  location: 'dubai-marina' | 'downtown-dubai' | 'business-bay' | 'jumeirah' | 'deira' | 'abu-dhabi' | 'sharjah'
   address: {
     place?: string
     pincode?: number

@@ -1,3 +1,5 @@
+import { Review } from './review';
+
 export interface CarFilters {
   priceRange?: [number, number];
   categories?: string[];
@@ -20,7 +22,6 @@ export interface Car {
   fuelType: 'petrol' | 'diesel' | 'hybrid' | 'electric'
   seatingCapacity: number
   color: string
-  location: 'dubai-marina' | 'downtown-dubai' | 'business-bay' | 'jumeirah' | 'deira' | 'abu-dhabi' | 'sharjah'
   address: {
     place?: string
     pincode?: number
@@ -28,7 +29,15 @@ export interface Car {
   amenities: string[]
   images: string[]
   status: 'active' | 'inactive' | 'pending'
-  owner: string
+  owner: {
+    _id: string
+    fname: string
+    lname: string
+    email: string
+    phone: string
+    role: string
+  }
+  reviews?: Review[]
   averageRating?: number
   reviewCount?: number
   createdAt: Date
@@ -48,7 +57,6 @@ export interface CreateCarPayload {
   fuelType: 'petrol' | 'diesel' | 'hybrid' | 'electric'
   seatingCapacity: number
   color: string
-  location: 'dubai-marina' | 'downtown-dubai' | 'business-bay' | 'jumeirah' | 'deira' | 'abu-dhabi' | 'sharjah'
   address: {
     place?: string
     pincode?: number

@@ -13,7 +13,7 @@ export interface ICar {
   fuelType: "petrol" | "diesel" | "hybrid" | "electric";
   seatingCapacity: number;
   color: string;
-  location: "dubai-marina" | "downtown-dubai" | "business-bay" | "jumeirah" | "deira" | "abu-dhabi" | "sharjah";
+
   address: {
     place?: string;
     pincode?: number;
@@ -22,6 +22,7 @@ export interface ICar {
   images: string[];
   status: "active" | "inactive" | "pending";
   owner: mongoose.Types.ObjectId;
+  reviews: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }
