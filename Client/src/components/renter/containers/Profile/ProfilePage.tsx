@@ -80,7 +80,6 @@ const UserProfilePage = () => {
     location: user.address
       ? `${user.address.city || ""}, ${user.address.emirate || "UAE"}`.trim()
       : "UAE",
-    avatar: user.profileImage || "/default-avatar.png",
     joinedDate: user.createdAt
       ? new Date(user.createdAt).toLocaleDateString("en-US", {
           year: "numeric",
@@ -95,6 +94,29 @@ const UserProfilePage = () => {
         : "Standard",
     bio: user.companyDetails?.bio || "No bio available",
   };
+
+  // Generate initials for avatar
+  const getInitials = (fname: string, lname: string) => {
+    return `${fname.charAt(0)}${lname.charAt(0)}`.toUpperCase();
+  };
+  
+  const initials = getInitials(user.fname, user.lname);
+  
+  // Generate color based on name
+  const getAvatarColor = (name: string) => {
+    const colors = [
+      'from-orange-500 to-red-500',
+      'from-blue-500 to-cyan-500', 
+      'from-purple-500 to-pink-500',
+      'from-emerald-500 to-teal-500',
+      'from-indigo-500 to-purple-500',
+      'from-amber-500 to-orange-500'
+    ];
+    const index = name.charCodeAt(0) % colors.length;
+    return colors[index];
+  };
+  
+  const avatarGradient = getAvatarColor(userData.name);
 
   if (isLoading) {
     return (
@@ -134,13 +156,19 @@ const UserProfilePage = () => {
                 {/* Avatar */}
                 <div className="relative self-center md:self-auto">
                   <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 lg:w-36 lg:h-36 rounded-full border-4 border-white shadow-2xl overflow-hidden group-hover:scale-105 transition-transform duration-500">
-                    <Image
-                      width={144}
-                      height={144}
-                      src={userData.avatar}
-                      alt={userData.name}
-                      className="w-full h-full object-cover"
-                    />
+                    {user.profileImage ? (
+                      <Image
+                        width={144}
+                        height={144}
+                        src={user.profileImage}
+                        alt={userData.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className={`w-full h-full bg-gradient-to-br ${avatarGradient} flex items-center justify-center text-white font-bold text-xl sm:text-2xl lg:text-3xl`}>
+                        {initials}
+                      </div>
+                    )}
                   </div>
                   {userData.isVerified && (
                     <div className="absolute -bottom-2 -right-2 bg-gradient-to-r from-emerald-500 to-teal-500 p-1.5 sm:p-2 rounded-full shadow-lg animate-fade-in-right">

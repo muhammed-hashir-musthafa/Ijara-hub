@@ -20,7 +20,7 @@ const companyDetailsSchema = new mongoose.Schema({
 
 const UserSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
   {
-    customId: { type: String }, // Custom unique ID field
+    customId: { type: String, unique: true }, // Custom unique ID field
     fname: {
       type: String,
       required: [true, "First Name is required"],
@@ -118,6 +118,7 @@ const UserSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
 
 // Indexes
 UserSchema.index({ email: 1 }, { unique: true });
+UserSchema.index({ customId: 1 }, { unique: true });
 UserSchema.index({ role: 1 });
 UserSchema.index({ createdAt: -1 });
 
@@ -136,8 +137,29 @@ UserSchema.pre("validate", function (next) {
   next();
 });
 
-// Pre-save hook for password hashing
+// Pre-save hook for customId generation and password hashing
 UserSchema.pre("save", async function (next) {
+  // Generate unique customId if not provided
+  if (!this.customId) {
+    const generateCustomId = () => {
+      const prefix = this.role.toUpperCase().substring(0, 2);
+      const timestamp = Date.now().toString().slice(-6);
+      const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+      return `${prefix}${timestamp}${random}`;
+    };
+    
+    let customId = generateCustomId();
+    let exists = await User.findOne({ customId });
+    
+    while (exists) {
+      customId = generateCustomId();
+      exists = await User.findOne({ customId });
+    }
+    
+    this.customId = customId;
+  }
+
+  // Hash password if modified
   if (!this.isModified("password")) return next();
 
   try {
