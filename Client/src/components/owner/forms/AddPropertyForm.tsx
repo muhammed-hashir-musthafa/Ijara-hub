@@ -44,6 +44,7 @@ import Image from "next/image";
 import { Formik, Form, Field, ErrorMessage, FormikHelpers } from "formik";
 import * as Yup from "yup";
 import { CarForm, PropertyForm, RoomForm } from "@/types/owner";
+import { UploadService } from "@/lib/upload";
 
 // Type guards
 function isRoomForm(form: PropertyForm): form is RoomForm {
@@ -162,6 +163,7 @@ interface AddPropertyFormProps {
 
 export default function AddPropertyForm({ propertyType, onSubmit }: AddPropertyFormProps) {
   const [draggedOver, setDraggedOver] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const removeImage = (
     index: number,
@@ -183,16 +185,29 @@ export default function AddPropertyForm({ propertyType, onSubmit }: AddPropertyF
     setFieldValue("amenities", updatedAmenities);
   };
 
-  const handleImageUpload = (
+  const handleImageUpload = async (
     files: FileList,
     setFieldValue: (field: string, value: unknown) => void,
     values: PropertyForm
   ) => {
-    const newImages = Array.from(files).map((file) =>
-      URL.createObjectURL(file)
-    );
-    const updatedImages = [...values.images, ...newImages].slice(0, 8);
-    setFieldValue("images", updatedImages);
+    if (files.length === 0) return;
+    
+    setUploading(true);
+    try {
+      const fileArray = Array.from(files);
+      const uploadResults = await UploadService.uploadMultiple(
+        fileArray, 
+        propertyType === 'room' ? 'rooms' : 'cars'
+      );
+      
+      const newImageUrls = uploadResults.map(result => result.url);
+      const updatedImages = [...values.images, ...newImageUrls].slice(0, 8);
+      setFieldValue("images", updatedImages);
+    } catch (error) {
+      console.error('Failed to upload images:', error);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const roomCategories = [
@@ -214,20 +229,35 @@ export default function AddPropertyForm({ propertyType, onSubmit }: AddPropertyF
 
   const roomAmenities = [
     { id: "wifi", label: "WiFi", icon: Wifi },
-    { id: "coffee", label: "Coffee Machine", icon: Coffee },
     { id: "tv", label: "Smart TV", icon: Tv },
     { id: "ac", label: "Air Conditioning", icon: AirVent },
-    { id: "parking", label: "Parking", icon: Car },
+    { id: "minibar", label: "Minibar", icon: Coffee },
+    { id: "balcony", label: "Balcony", icon: Home },
+    { id: "sea_view", label: "Sea View", icon: Globe },
+    { id: "city_view", label: "City View", icon: Globe },
+    { id: "jacuzzi", label: "Jacuzzi", icon: AirVent },
     { id: "kitchen", label: "Kitchen", icon: Star },
+    { id: "parking", label: "Parking", icon: Car },
+    { id: "gym_access", label: "Gym Access", icon: Users },
+    { id: "pool_access", label: "Pool Access", icon: Users },
+    { id: "room_service", label: "Room Service", icon: Clock },
+    { id: "laundry", label: "Laundry", icon: Clock },
+    { id: "safe", label: "Safe", icon: Shield },
   ];
 
   const carAmenities = [
     { id: "gps", label: "GPS Navigation", icon: Globe },
-    { id: "insurance", label: "Full Insurance", icon: Shield },
-    { id: "support", label: "24/7 Support", icon: Clock },
-    { id: "chauffeur", label: "Chauffeur Available", icon: Users },
     { id: "bluetooth", label: "Bluetooth", icon: Wifi },
-    { id: "ac", label: "Air Conditioning", icon: AirVent },
+    { id: "backup_camera", label: "Backup Camera", icon: Camera },
+    { id: "sunroof", label: "Sunroof", icon: Star },
+    { id: "leather_seats", label: "Leather Seats", icon: Star },
+    { id: "heated_seats", label: "Heated Seats", icon: AirVent },
+    { id: "cruise_control", label: "Cruise Control", icon: Clock },
+    { id: "keyless_entry", label: "Keyless Entry", icon: Shield },
+    { id: "usb_charging", label: "USB Charging", icon: Wifi },
+    { id: "wifi_hotspot", label: "WiFi Hotspot", icon: Globe },
+    { id: "premium_audio", label: "Premium Audio", icon: Sparkles },
+    { id: "parking_sensors", label: "Parking Sensors", icon: Car },
   ];
 
   const getFieldError = (
@@ -1021,7 +1051,7 @@ export default function AddPropertyForm({ propertyType, onSubmit }: AddPropertyF
                   e.preventDefault();
                   setDraggedOver(false);
                   const files = e.dataTransfer.files;
-                  if (files.length > 0)
+                  if (files.length > 0 && !uploading)
                     handleImageUpload(files, setFieldValue, values);
                 }}
               >
@@ -1048,6 +1078,7 @@ export default function AddPropertyForm({ propertyType, onSubmit }: AddPropertyF
                           values
                         )
                       }
+                      disabled={uploading}
                       className="hidden"
                       id="image-upload"
                     />
@@ -1057,10 +1088,11 @@ export default function AddPropertyForm({ propertyType, onSubmit }: AddPropertyF
                       onClick={() =>
                         document.getElementById("image-upload")?.click()
                       }
-                      className="border-amber-300 text-amber-700 hover:bg-amber-50 hover:text-amber-600"
+                      disabled={uploading}
+                      className="border-amber-300 text-amber-700 hover:bg-amber-50 hover:text-amber-600 disabled:opacity-50"
                     >
                       <ImageIcon className="h-4 w-4 mr-2" />
-                      Choose Images
+                      {uploading ? 'Uploading...' : 'Choose Images'}
                     </Button>
                   </div>
                   <p className="text-sm text-gray-500">

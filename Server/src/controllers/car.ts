@@ -88,9 +88,9 @@ export const createCar = async (req: AuthRequest, res: Response) => {
 
     // Validate image URLs if provided
     if (images && images.length > 0) {
-      console.log('Validating car images:', images);
+      // console.log('Validating car images:', images);
       if (!ImageUtils.validateImageUrls(images)) {
-        console.log('Image validation failed for URLs:', images);
+        // console.log('Image validation failed for URLs:', images);
         return errorResponse(res, 400, "Invalid image URLs. Images must be from our S3 bucket");
       }
       if (!ImageUtils.validateImageType(images, 'cars')) {

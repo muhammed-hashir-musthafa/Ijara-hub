@@ -12,6 +12,7 @@ import { Textarea } from "@/components/base/ui/textarea";
 import { Badge } from "@/components/base/ui/badge";
 import { updateRoom } from "@/services/roomService";
 import { updateCar } from "@/services/carService";
+import { UploadService } from "@/lib/upload";
 import {
   Select,
   SelectContent,
@@ -35,6 +36,8 @@ import {
   Users,
   Camera,
   ImageIcon,
+  Home,
+  Sparkles,
 } from "lucide-react";
 import Image from "next/image";
 import { Property, PropertyCategory } from "@/types/owner";
@@ -119,6 +122,7 @@ export default function EditPropertyForm({
   onSave,
   onCancel,
 }: EditPropertyFormProps) {
+  const [uploading, setUploading] = React.useState(false);
   const initialValues: FormValues = {
     title: property.title,
     description: property.description || "",
@@ -152,32 +156,60 @@ export default function EditPropertyForm({
 
   const roomAmenities = [
     { id: "wifi", label: "WiFi", icon: Wifi },
-    { id: "coffee", label: "Coffee Machine", icon: Coffee },
     { id: "tv", label: "Smart TV", icon: Tv },
     { id: "ac", label: "Air Conditioning", icon: AirVent },
-    { id: "parking", label: "Parking", icon: Car },
+    { id: "minibar", label: "Minibar", icon: Coffee },
+    { id: "balcony", label: "Balcony", icon: Home },
+    { id: "sea_view", label: "Sea View", icon: Globe },
+    { id: "city_view", label: "City View", icon: Globe },
+    { id: "jacuzzi", label: "Jacuzzi", icon: AirVent },
     { id: "kitchen", label: "Kitchen", icon: Star },
+    { id: "parking", label: "Parking", icon: Car },
+    { id: "gym_access", label: "Gym Access", icon: Users },
+    { id: "pool_access", label: "Pool Access", icon: Users },
+    { id: "room_service", label: "Room Service", icon: Clock },
+    { id: "laundry", label: "Laundry", icon: Clock },
+    { id: "safe", label: "Safe", icon: Shield },
   ];
 
   const carAmenities = [
     { id: "gps", label: "GPS Navigation", icon: Globe },
-    { id: "insurance", label: "Full Insurance", icon: Shield },
-    { id: "support", label: "24/7 Support", icon: Clock },
-    { id: "chauffeur", label: "Chauffeur Available", icon: Users },
     { id: "bluetooth", label: "Bluetooth", icon: Wifi },
-    { id: "ac", label: "Air Conditioning", icon: AirVent },
+    { id: "backup_camera", label: "Backup Camera", icon: Camera },
+    { id: "sunroof", label: "Sunroof", icon: Star },
+    { id: "leather_seats", label: "Leather Seats", icon: Star },
+    { id: "heated_seats", label: "Heated Seats", icon: AirVent },
+    { id: "cruise_control", label: "Cruise Control", icon: Clock },
+    { id: "keyless_entry", label: "Keyless Entry", icon: Shield },
+    { id: "usb_charging", label: "USB Charging", icon: Wifi },
+    { id: "wifi_hotspot", label: "WiFi Hotspot", icon: Globe },
+    { id: "premium_audio", label: "Premium Audio", icon: Star },
+    { id: "parking_sensors", label: "Parking Sensors", icon: Car },
   ];
 
-  const handleImageUpload = (
+  const handleImageUpload = async (
     files: FileList,
     setFieldValue: (field: string, value: string[]) => void,
     currentImages: string[]
   ) => {
-    const newImages = Array.from(files).map((file) =>
-      URL.createObjectURL(file)
-    );
-    const updatedImages = [...currentImages, ...newImages].slice(0, 8);
-    setFieldValue("images", updatedImages);
+    if (files.length === 0) return;
+    
+    setUploading(true);
+    try {
+      const fileArray = Array.from(files);
+      const uploadResults = await UploadService.uploadMultiple(
+        fileArray, 
+        property.type === 'room' ? 'rooms' : 'cars'
+      );
+      
+      const newImageUrls = uploadResults.map(result => result.url);
+      const updatedImages = [...currentImages, ...newImageUrls].slice(0, 8);
+      setFieldValue("images", updatedImages);
+    } catch (error) {
+      console.error('Failed to upload images:', error);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const removeImage = (
@@ -952,6 +984,7 @@ export default function EditPropertyForm({
                     values.images
                   )
                 }
+                disabled={uploading}
                 className="hidden"
                 id="image-upload"
               />
@@ -959,10 +992,11 @@ export default function EditPropertyForm({
                 type="button"
                 variant="outline"
                 onClick={() => document.getElementById("image-upload")?.click()}
-                className="border-amber-300 text-amber-700 hover:bg-amber-50"
+                disabled={uploading}
+                className="border-amber-300 text-amber-700 hover:bg-amber-50 disabled:opacity-50"
               >
                 <ImageIcon className="h-4 w-4 mr-2" />
-                Choose Images
+                {uploading ? 'Uploading...' : 'Choose Images'}
               </Button>
             </div>
 

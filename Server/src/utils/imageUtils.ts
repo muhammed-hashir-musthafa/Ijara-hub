@@ -7,11 +7,11 @@ export class ImageUtils {
     const bucketName = config.aws.s3Bucket;
     const region = config.aws.region;
     
-    console.log('Validating URLs:', urls);
-    console.log('Bucket:', bucketName, 'Region:', region);
+    // console.log('Validating URLs:', urls);
+    // console.log('Bucket:', bucketName, 'Region:', region);
     
     return urls.every(url => {
-      console.log('Testing URL:', url);
+      // console.log('Testing URL:', url);
       
       // Support multiple S3 URL formats
       const patterns = [
@@ -21,15 +21,15 @@ export class ImageUtils {
         `https://s3.amazonaws.com/${bucketName}/`
       ];
       
-      console.log('Against patterns:', patterns);
+      // console.log('Against patterns:', patterns);
       
       const isValid = patterns.some(pattern => {
         const matches = url.startsWith(pattern);
-        console.log(`Pattern ${pattern} matches: ${matches}`);
+        // console.log(`Pattern ${pattern} matches: ${matches}`);
         return matches;
       });
       
-      console.log('URL validation result:', isValid);
+      // console.log('URL validation result:', isValid);
       return isValid;
     });
   }

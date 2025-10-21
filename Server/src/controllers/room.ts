@@ -80,9 +80,9 @@ export const createRoom = async (req: AuthRequest, res: Response) => {
 
     // Validate image URLs if provided
     if (images && images.length > 0) {
-      console.log('Validating room images:', images);
+      // console.log('Validating room images:', images);
       if (!ImageUtils.validateImageUrls(images)) {
-        console.log('Image validation failed for URLs:', images);
+        // console.log('Image validation failed for URLs:', images);
         return errorResponse(res, 400, "Invalid image URLs. Images must be from our S3 bucket");
       }
       if (!ImageUtils.validateImageType(images, 'rooms')) {

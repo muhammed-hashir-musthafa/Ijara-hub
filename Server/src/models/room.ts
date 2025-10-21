@@ -77,7 +77,6 @@ const RoomSchema = new mongoose.Schema<IRoom, RoomModel, IRoomMethods>(
       type: Number,
       required: [true, "Floor number is required"],
       min: [1, "Floor must be at least 1"],
-      max: [100, "Floor cannot exceed 100"],
     },
     address: addressSchema,
     amenities: [
@@ -117,10 +116,12 @@ const RoomSchema = new mongoose.Schema<IRoom, RoomModel, IRoomMethods>(
       ref: "User",
       required: [true, "Owner is required"],
     },
-    reviews: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Review",
-    }],
+    reviews: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Review",
+      },
+    ],
   },
   {
     timestamps: true,
@@ -128,8 +129,6 @@ const RoomSchema = new mongoose.Schema<IRoom, RoomModel, IRoomMethods>(
     toObject: { virtuals: true },
   }
 );
-
-
 
 // Indexes
 RoomSchema.index({ roomNumber: 1 }, { unique: true });
