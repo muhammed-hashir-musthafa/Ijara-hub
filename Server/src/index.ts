@@ -11,6 +11,7 @@ import roomRoutes from "./routes/room";
 import carRoutes from "./routes/car";
 import messageRoutes from "./routes/message";
 import reviewRoutes from "./routes/review";
+import uploadRoutes from "./routes/upload";
 import { setupMessageSocket } from "./controllers/messageSocket";
 import { apiLimiter } from "./middleware/rateLimiter";
 
@@ -56,6 +57,7 @@ app.use("/api/rooms", roomRoutes);
 app.use("/api/cars", carRoutes);
 app.use("/api/messages", authenticateToken, messageRoutes);
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/upload", uploadRoutes);
 
 // Socket.IO setup
 setupMessageSocket(io);
