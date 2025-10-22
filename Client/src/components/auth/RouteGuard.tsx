@@ -20,13 +20,13 @@ const protectedRoutes = {
 };
 
 export const RouteGuard = ({ children, allowedRoles, requireAuth = true }: RouteGuardProps) => {
-  const { user, loading, isAuthenticated } = useAuth();
+  const { user, isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
-    if (loading) return;
+    if (isLoading) return;
 
     // Check if current route is protected
     const isProtectedRoute = Object.keys(protectedRoutes).some(route => 
@@ -43,16 +43,16 @@ export const RouteGuard = ({ children, allowedRoles, requireAuth = true }: Route
       const routeRoles = allowedRoles || Object.entries(protectedRoutes)
         .find(([route]) => pathname.startsWith(route))?.[1];
 
-      if (routeRoles && user && !routeRoles.includes(user.role)) {
+      if (routeRoles && user && user.role && !routeRoles.includes(user.role as UserRole)) {
         router.replace('/');
         return;
       }
     }
 
     setIsAuthorized(true);
-  }, [user, loading, isAuthenticated, pathname, router, allowedRoles, requireAuth]);
+  }, [user, isLoading, isAuthenticated, pathname, router, allowedRoles, requireAuth]);
 
-  if (loading || !isAuthorized) {
+  if (isLoading || !isAuthorized) {
     return <AuthLoader />;
   }
 
