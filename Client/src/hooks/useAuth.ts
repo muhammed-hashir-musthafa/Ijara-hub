@@ -1,81 +1,52 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { getCookie, deleteCookie } from '@/lib/cookies';
-import { UserRole } from '@/types/auth';
-
-interface User {
-  id: string;
-  email: string;
-  role: UserRole;
-  isVerified: boolean;
-}
-
-const getInitialAuthState = () => {
-  if (typeof window === 'undefined') return { user: null, loading: true };
-  
-  const token = getCookie('token');
-  const userId = getCookie('userId');
-  const userRole = getCookie('userRole') as UserRole;
-
-  if (token && userId && userRole) {
-    return {
-      user: {
-        id: userId,
-        email: '',
-        role: userRole,
-        isVerified: true
-      },
-      loading: false
-    };
-  }
-  
-  return { user: null, loading: false };
-};
+import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { deleteCookie, getCookie } from "@/lib/cookies";
 
 export const useAuth = () => {
-  const initialState = getInitialAuthState();
-  const [user, setUser] = useState<User | null>(initialState.user);
-  const [loading, setLoading] = useState(initialState.loading);
+  const { data: session, status } = useSession();
   const router = useRouter();
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    const token = getCookie('token');
-    const userId = getCookie('userId');
-    const userRole = getCookie('userRole') as UserRole;
-
-    if (token && userId && userRole) {
-      setUser({
-        id: userId,
-        email: '',
-        role: userRole,
-        isVerified: true
-      });
-    } else {
-      setUser(null);
+  
+  // Check for traditional cookie-based auth
+  const token = getCookie("token");
+  const userId = getCookie("userId");
+  const userRole = getCookie("userRole");
+  
+  const logout = async () => {
+    // Clear NextAuth session if exists
+    if (session) {
+      await signOut({ redirect: false });
     }
-    setLoading(false);
-  }, []);
-
-  const logout = () => {
-    deleteCookie('token');
-    deleteCookie('userId');
-    deleteCookie('userRole');
-    setUser(null);
-    router.push('/login');
+    
+    // Clear custom cookies
+    deleteCookie("token");
+    deleteCookie("userId");
+    deleteCookie("userRole");
+    
+    // Clear localStorage
+    localStorage.clear();
+    
+    // Clear sessionStorage
+    sessionStorage.clear();
+    
+    router.push("/login");
   };
 
-  const isAuthenticated = !!user;
-  const hasRole = (roles: UserRole[]) => user && roles.includes(user.role);
+  // Check authentication from both NextAuth and cookies
+  const isAuthenticated = !!session || !!token;
+  const isLoading = status === "loading";
+  
+  // Prefer NextAuth user, fallback to cookie data
+  const user = session?.user || (token ? { id: userId, role: userRole, fname: null, lname: null } : null);
 
   return {
     user,
-    loading,
+    token,
+    userRole,
+    isLoading,
     isAuthenticated,
-    hasRole,
-    logout
+    logout,
+    session,
   };
 };
