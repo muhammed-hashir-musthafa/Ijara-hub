@@ -20,10 +20,12 @@ import { Badge } from "@/components/base/ui/badge";
 import Image from "next/image";
 import { getUserById } from "@/services/userService";
 import { getOwnerDashboardStats, DashboardStats } from "@/services/dashboardService";
+import { getConversations } from "@/services/messageService";
 import { User } from "@/types/auth";
+import { Conversation } from "@/types/message";
 import { getCookie } from "@/lib/cookies";
 
-const getNavigationItems = (stats: DashboardStats | null) => [
+const getNavigationItems = (stats: DashboardStats | null, unreadCount: number) => [
   { title: "Dashboard", url: "/owner", icon: LayoutDashboard, badge: null },
   {
     title: "My Properties",
@@ -33,7 +35,7 @@ const getNavigationItems = (stats: DashboardStats | null) => [
   },
   // { title: "Bookings", url: "/owner/bookings", icon: Calendar, badge: null },
   { title: "Analytics", url: "/owner/analytics", icon: BarChart3, badge: null },
-  { title: "Messages", url: "/messages", icon: MessageSquare, badge: null },
+  { title: "Messages", url: "/owner/messages", icon: MessageSquare, badge: unreadCount > 0 ? unreadCount : null },
 ];
 
 const quickActions = [
@@ -45,23 +47,35 @@ export default function Sidebar() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
   const pathname = usePathname();
   const currentPath = useMemo(() => pathname || "/owner", [pathname]);
   
-  const navigationItems = useMemo(() => getNavigationItems(stats), [stats]);
+  const navigationItems = useMemo(() => getNavigationItems(stats, unreadCount), [stats, unreadCount]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const userId = getCookie('userId');
         if (userId) {
-          const [userResponse, statsResponse] = await Promise.all([
+          const [userResponse, statsResponse, conversationsResponse] = await Promise.all([
             getUserById(userId),
-            getOwnerDashboardStats(userId)
+            getOwnerDashboardStats(userId),
+            getConversations()
           ]);
-          // console.log(userResponse, "lskjdf", statsResponse);
+          
           setUser(userResponse?.data?.user);
           setStats(statsResponse);
+          
+          // Calculate unread conversations count
+          const conversations = conversationsResponse?.data?.conversations || [];
+          const unreadConversations = conversations.filter((conv: Conversation) => {
+            const userUnreadCount = conv.unreadCount instanceof Map 
+              ? conv.unreadCount.get(userId) || 0
+              : (conv.unreadCount as Record<string, number>)?.[userId] || 0;
+            return userUnreadCount > 0;
+          });
+          setUnreadCount(unreadConversations.length);
         }
       } catch (error) {
         console.error('Failed to fetch data:', error);
@@ -117,7 +131,9 @@ export default function Sidebar() {
                   />
                   <span className="font-medium">{item.title}</span>
                   {item.badge && (
-                    <Badge className="ml-auto bg-amber-500 text-white text-xs">
+                    <Badge className={`ml-auto text-white text-xs ${
+                      item.title === 'Messages' ? 'bg-red-500' : 'bg-amber-500'
+                    }`}>
                       {item.badge}
                     </Badge>
                   )}
