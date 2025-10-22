@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/base/ui/card";
 import { Badge } from "@/components/base/ui/badge";
+import { Button } from "@/components/base/ui/button";
 import {
   User,
   Mail,
@@ -18,21 +19,39 @@ import {
   Calendar,
   Trophy,
   CheckCircle,
+  Edit,
+  Save,
+  X,
 } from "lucide-react";
 import Image from "next/image";
 import { getProfile } from "@/services/authService";
-import { User as UserType } from "@/types/auth";
+import { updateUser } from "@/services/userService";
+import { User as UserType, UpdateUserPayload } from "@/types/auth";
+import ProfileEditForm from "../../forms/ProfileEditForm";
 
 const UserProfilePage = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [user, setUser] = useState<UserType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [formData, setFormData] = useState<UpdateUserPayload>({});
 
   const fetchProfile = async () => {
     try {
       setIsLoading(true);
       const response = await getProfile();
-      setUser(response?.data?.user);
+      const userData = response?.data?.user;
+      setUser(userData);
+      setFormData({
+        fname: userData.fname,
+        lname: userData.lname,
+        email: userData.email,
+        phone: userData.phone,
+        gender: userData.gender,
+        age: userData.age,
+        address: userData.address,
+      });
     } catch (error: unknown) {
       if (error instanceof AxiosError) {
         if (error?.response?.status === 401) {
@@ -57,6 +76,39 @@ const UserProfilePage = () => {
     }
   };
 
+  const handleSave = async () => {
+    if (!user?._id) return;
+
+    try {
+      setIsSaving(true);
+      const response = await updateUser(user._id, formData);
+      setUser(response.user);
+      setIsEditing(false);
+      toast.success("Profile updated successfully!");
+      await fetchProfile();
+    } catch (error) {
+      console.error("Failed to update profile:", error);
+      toast.error("Failed to update profile");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    if (user) {
+      setFormData({
+        fname: user.fname,
+        lname: user.lname,
+        email: user.email,
+        phone: user.phone,
+        gender: user.gender,
+        age: user.age,
+        address: user.address,
+      });
+    }
+    setIsEditing(false);
+  };
+
   useEffect(() => {
     setTimeout(() => setIsVisible(true), 100);
     fetchProfile();
@@ -72,8 +124,12 @@ const UserProfilePage = () => {
     );
   }
 
+  const fullName = isEditing
+    ? `${formData.fname || ""} ${formData.lname || ""}`.trim() || "User"
+    : `${user.fname} ${user.lname}`;
+
   const userData = {
-    name: `${user.fname} ${user.lname}`,
+    name: fullName,
     isVerified: user.isVerified,
     email: user.email,
     phone: user.phone,
@@ -92,7 +148,6 @@ const UserProfilePage = () => {
         : user.role === "admin"
         ? "Admin"
         : "Standard",
-    bio: user.companyDetails?.bio || "No bio available",
   };
 
   // Generate initials for avatar
@@ -100,7 +155,9 @@ const UserProfilePage = () => {
     return `${fname.charAt(0)}${lname.charAt(0)}`.toUpperCase();
   };
   
-  const initials = getInitials(user.fname, user.lname);
+  const initials = isEditing
+    ? getInitials(formData.fname || "U", formData.lname || "U")
+    : getInitials(user.fname, user.lname);
   
   // Generate color based on name
   const getAvatarColor = (name: string) => {
@@ -189,6 +246,11 @@ const UserProfilePage = () => {
                     </Badge>
                   </div>
                   <div className="flex flex-wrap justify-center md:justify-start gap-4 text-xs sm:text-sm opacity-90">
+                    <div className="flex items-center space-x-2 bg-white/20 px-2 py-1 rounded-full">
+                      <span className="font-mono font-semibold">
+                        ID: {user.customId}
+                      </span>
+                    </div>
                     <div className="flex items-center space-x-1">
                       <MapPin className="h-4 w-4" />
                       <span>{userData.location}</span>
@@ -199,6 +261,36 @@ const UserProfilePage = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Edit/Save/Cancel Buttons */}
+                <div className="flex justify-center md:justify-end gap-2">
+                  {!isEditing ? (
+                    <Button
+                      onClick={() => setIsEditing(true)}
+                      className="bg-gradient-to-r from-orange-600 to-amber-600 text-white border-0 shadow-lg hover:scale-105 transition-all text-sm sm:text-base px-4 sm:px-6 py-2 sm:py-3"
+                    >
+                      <Edit className="h-4 w-4 mr-2" /> Edit Profile
+                    </Button>
+                  ) : (
+                    <>
+                      <Button
+                        onClick={handleSave}
+                        disabled={isSaving}
+                        className="bg-gradient-to-r from-orange-600 to-amber-600 text-white border-0 shadow-lg hover:scale-105 transition-all text-sm sm:text-base px-4 sm:px-6 py-2 sm:py-3"
+                      >
+                        <Save className="h-4 w-4 mr-2" />
+                        {isSaving ? "Saving..." : "Save"}
+                      </Button>
+                      <Button
+                        onClick={handleCancel}
+                        variant="outline"
+                        className="text-sm sm:text-base px-4 sm:px-6 py-2 sm:py-3"
+                      >
+                        <X className="h-4 w-4 mr-2" /> Cancel
+                      </Button>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -206,18 +298,56 @@ const UserProfilePage = () => {
 
         {/* Content Sections */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-          {/* About & Preferences */}
+          {/* Profile Details */}
           <div className="lg:col-span-2 space-y-6">
             <Card className="bg-white/80 backdrop-blur-lg border-0 shadow-lg animate-fade-in-up">
               <CardHeader>
                 <CardTitle className="flex items-center text-base sm:text-xl">
-                  <User className="h-5 w-5 mr-2 text-orange-600" /> About Me
+                  <User className="h-5 w-5 mr-2 text-orange-600" />
+                  {isEditing ? "Edit Profile" : "Profile Details"}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-700 mb-4 text-sm sm:text-base">
-                  {userData.bio}
-                </p>
+                {isEditing ? (
+                  <ProfileEditForm formData={formData} setFormData={setFormData} />
+                ) : (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700">
+                      <div>
+                        <p className="font-semibold mb-1">First Name</p>
+                        <p>{user.fname}</p>
+                      </div>
+                      <div>
+                        <p className="font-semibold mb-1">Last Name</p>
+                        <p>{user.lname}</p>
+                      </div>
+                      <div>
+                        <p className="font-semibold mb-1">Email</p>
+                        <p>{user.email}</p>
+                      </div>
+                      <div>
+                        <p className="font-semibold mb-1">Phone</p>
+                        <p>{user.phone}</p>
+                      </div>
+                      <div>
+                        <p className="font-semibold mb-1">Gender</p>
+                        <p className="capitalize">{user.gender}</p>
+                      </div>
+                      <div>
+                        <p className="font-semibold mb-1">Age</p>
+                        <p>{user.age}</p>
+                      </div>
+                      <div>
+                        <p className="font-semibold mb-1">City</p>
+                        <p>{user.address?.city || "Not specified"}</p>
+                      </div>
+                      <div>
+                        <p className="font-semibold mb-1">Emirate</p>
+                        <p>{user.address?.emirate || "Not specified"}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
