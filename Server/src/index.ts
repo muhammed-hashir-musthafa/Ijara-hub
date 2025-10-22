@@ -24,9 +24,16 @@ const server = http.createServer(app);
 // Set up Socket.IO with CORS
 const io = new SocketIOServer(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: process.env.NODE_ENV === "production" 
+      ? ["https://yourdomain.com"] 
+      : ["http://localhost:3000"],
     methods: ["GET", "POST", "PATCH"],
+    credentials: true
   },
+  transports: ['polling', 'websocket'],
+  allowEIO3: true,
+  pingTimeout: 60000,
+  pingInterval: 25000
 });
 
 // Connect to MongoDB
