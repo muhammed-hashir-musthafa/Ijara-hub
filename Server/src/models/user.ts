@@ -20,7 +20,7 @@ const companyDetailsSchema = new mongoose.Schema({
 
 const UserSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
   {
-    customId: { type: String, unique: true }, // Custom unique ID field
+    customId: { type: String }, // Custom unique ID field
     fname: {
       type: String,
       required: [true, "First Name is required"],
@@ -38,7 +38,6 @@ const UserSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
     email: {
       type: String,
       required: [true, "Email is required"],
-      unique: true,
       lowercase: true,
       trim: true,
       match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Please enter a valid email"],

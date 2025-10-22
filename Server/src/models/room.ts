@@ -11,7 +11,6 @@ const RoomSchema = new mongoose.Schema<IRoom, RoomModel, IRoomMethods>(
     roomNumber: {
       type: String,
       required: [true, "Room number is required"],
-      unique: true,
       trim: true,
       uppercase: true,
       match: [

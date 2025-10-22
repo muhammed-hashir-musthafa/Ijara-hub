@@ -42,7 +42,6 @@ const CarSchema = new mongoose.Schema<ICar, CarModel, ICarMethods>(
     licensePlate: {
       type: String,
       required: [true, "License plate is required"],
-      unique: true,
       trim: true,
       uppercase: true,
       match: [/^[A-Z0-9\s\-]{3,15}$/, "Invalid license plate format"],
