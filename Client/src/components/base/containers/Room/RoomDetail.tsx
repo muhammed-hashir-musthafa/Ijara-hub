@@ -430,7 +430,11 @@ const RoomDetailPage = () => {
 
           {/* Booking Sidebar */}
           <div className="lg:col-span-1">
-            <OwnerProfileCard ownerId={room?.owner?._id || ""} />
+            <OwnerProfileCard 
+              ownerId={room?.owner?._id || ""} 
+              propertyId={room?._id}
+              propertyType="Room"
+            />
           </div>
         </div>
       </div>

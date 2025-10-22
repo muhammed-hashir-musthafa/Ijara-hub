@@ -21,17 +21,23 @@ import {
 } from "lucide-react";
 import { getOwnerProfile } from "@/services/userService";
 import { OwnerProfile } from "@/types/owner";
+import { getOrCreateConversation } from "@/services/messageService";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 interface OwnerProfileCardProps {
   ownerId: string;
+  propertyId?: string;
+  propertyType?: 'Room' | 'Car';
 }
 
-const OwnerProfileCard = ({ ownerId }: OwnerProfileCardProps) => {
+const OwnerProfileCard = ({ ownerId, propertyId, propertyType }: OwnerProfileCardProps) => {
   const [owner, setOwner] = useState<OwnerProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [isCreatingConversation, setIsCreatingConversation] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchOwnerProfile = async () => {
@@ -49,6 +55,29 @@ const OwnerProfileCard = ({ ownerId }: OwnerProfileCardProps) => {
     fetchOwnerProfile();
     setIsVisible(true);
   }, [ownerId]);
+
+  const handleContactOwner = async () => {
+    try {
+      setIsCreatingConversation(true);
+      
+      const payload = {
+        participantId: ownerId,
+        ...(propertyId && { propertyId }),
+        ...(propertyType && { propertyType })
+      };
+      
+      const response = await getOrCreateConversation(payload);
+      // console.log(response)
+      // Navigate to messages with conversation ID to auto-select it
+      router.push(`/messages?conversationId=${response?.data?.conversation?._id}`);
+    } catch (error) {
+      console.error('Failed to create conversation:', error);
+      // Still navigate to messages page in case conversation already exists
+      router.push('/messages');
+    } finally {
+      setIsCreatingConversation(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -101,8 +130,8 @@ const OwnerProfileCard = ({ ownerId }: OwnerProfileCardProps) => {
                   />
                 ) : (
                   <span className="text-2xl font-bold text-white">
-                    {owner.fname?.[0]}
-                    {owner.lname?.[0]}
+                    {owner.fname?.[0] || ''}
+                    {owner.lname?.[0] || ''}
                   </span>
                 )}
               </div>
@@ -150,7 +179,7 @@ const OwnerProfileCard = ({ ownerId }: OwnerProfileCardProps) => {
                 <span>
                   Since{" "}
                   {owner.companyDetails?.since ||
-                    new Date(owner.createdAt).getFullYear()}
+                    (owner.createdAt ? new Date(owner.createdAt).getFullYear() : new Date().getFullYear())}
                 </span>
               </div>
             </div>
@@ -229,10 +258,20 @@ const OwnerProfileCard = ({ ownerId }: OwnerProfileCardProps) => {
                 </div>
 
                 <div className="space-y-3 pt-6 border-t border-gray-200">
-                  <Button className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white py-3 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 group">
-                    <MessageSquare className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform" />
-                    Contact {owner.fname}
-                    <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                  <Button 
+                    onClick={handleContactOwner}
+                    disabled={isCreatingConversation}
+                    className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white py-3 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 group disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                  >
+                    {isCreatingConversation ? (
+                      <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                    ) : (
+                      <MessageSquare className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform" />
+                    )}
+                    {isCreatingConversation ? 'Starting Chat...' : `Contact ${owner.fname}`}
+                    {!isCreatingConversation && (
+                      <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                    )}
                   </Button>
 
                   <div className="grid grid-cols-2 gap-2">

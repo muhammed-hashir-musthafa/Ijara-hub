@@ -515,7 +515,11 @@ const CarDetailPage = () => {
 
           {/* Booking Sidebar */}
           <div className="lg:col-span-1">
-            <OwnerProfileCard ownerId={car?.owner?._id || ""} />
+            <OwnerProfileCard 
+              ownerId={car?.owner?._id || ""} 
+              propertyId={car?._id}
+              propertyType="Car"
+            />
           </div>
         </div>
       </div>
