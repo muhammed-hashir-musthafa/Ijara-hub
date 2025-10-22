@@ -37,7 +37,6 @@ import {
   Camera,
   ImageIcon,
   Home,
-  Sparkles,
 } from "lucide-react";
 import Image from "next/image";
 import { Property, PropertyCategory } from "@/types/owner";
