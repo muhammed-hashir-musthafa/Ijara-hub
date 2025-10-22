@@ -32,6 +32,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "ijara-hub.s3.us-east-1.amazonaws.com",
       },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
     ],
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;", // Add CSP for security
