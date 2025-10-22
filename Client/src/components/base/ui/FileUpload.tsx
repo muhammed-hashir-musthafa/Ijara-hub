@@ -2,6 +2,8 @@
 
 import { useCallback, useState } from 'react';
 import { useUpload } from '@/hooks/useUpload';
+import { UploadResponse } from '@/lib/upload';
+import Image from 'next/image';
 
 interface FileUploadProps {
   type: 'rooms' | 'cars' | 'profiles';
@@ -22,7 +24,7 @@ export default function FileUpload({
   const [previews, setPreviews] = useState<string[]>([]);
   const [isDragActive, setIsDragActive] = useState(false);
 
-  const handleFiles = async (files: FileList | null) => {
+  const handleFiles = useCallback(async (files: FileList | null) => {
     if (!files) return;
     
     const fileArray = Array.from(files);
@@ -32,7 +34,7 @@ export default function FileUpload({
     try {
       if (multiple) {
         const result = await uploadMultiple(fileArray, type);
-        onUploadComplete(result.files.map(f => f.url));
+        onUploadComplete(result.map((f: UploadResponse) => f.url));
       } else {
         const result = await uploadSingle(fileArray[0], type);
         onUploadComplete([result.url]);
@@ -43,13 +45,13 @@ export default function FileUpload({
       newPreviews.forEach(URL.revokeObjectURL);
       setPreviews([]);
     }
-  };
+  }, [multiple, uploadMultiple, uploadSingle, type, onUploadComplete, onUploadError]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragActive(false);
     handleFiles(e.dataTransfer.files);
-  }, []);
+  }, [handleFiles]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -112,7 +114,9 @@ export default function FileUpload({
       {previews.length > 0 && (
         <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2">
           {previews.map((preview, index) => (
-            <img
+            <Image
+              width={100}
+              height={80}
               key={index}
               src={preview}
               alt={`Preview ${index + 1}`}
