@@ -44,16 +44,20 @@ const UserSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
     },
     password: {
       type: String,
-      required: [true, "Password is required"],
+      required: function(this: IUser): boolean { return !this.googleId; },
       minlength: [6, "Password must be at least 6 characters"],
       match: [
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/,
         "Password must contain at least one uppercase letter, one lowercase letter, and one number",
       ],
     },
+    googleId: {
+      type: String,
+      sparse: true,
+    },
     gender: {
       type: String,
-      required: [true, "Gender is required"],
+      required: function(this: IUser): boolean { return !this.googleId; },
       enum: {
         values: ["male", "female", "other"],
         message: "Gender must be male, female, or other",
@@ -73,7 +77,7 @@ const UserSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
     },
     phone: {
       type: String,
-      required: [true, "Phone number is required"],
+      required: function(this: IUser): boolean { return !this.googleId; },
       trim: true,
       match: [
         /^[+]?[1-9][\d\s\-()]{7,15}$/,
@@ -118,6 +122,7 @@ const UserSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
 // Indexes
 UserSchema.index({ email: 1 }, { unique: true });
 UserSchema.index({ customId: 1 }, { unique: true });
+UserSchema.index({ googleId: 1 }, { sparse: true });
 UserSchema.index({ role: 1 });
 UserSchema.index({ createdAt: -1 });
 
@@ -158,8 +163,8 @@ UserSchema.pre("save", async function (next) {
     this.customId = customId;
   }
 
-  // Hash password if modified
-  if (!this.isModified("password")) return next();
+  // Hash password if modified and exists
+  if (!this.isModified("password") || !this.password) return next();
 
   try {
     const salt = await bcrypt.genSalt(12);
@@ -174,12 +179,13 @@ UserSchema.pre("save", async function (next) {
 UserSchema.methods.comparePassword = async function (
   candidatePassword: string
 ): Promise<boolean> {
+  if (!this.password) return false;
   return bcrypt.compare(candidatePassword, this.password);
 };
 
 // Remove password from JSON output
-UserSchema.methods.toJSON = function () {
-  const obj = this.toObject() as Record<string, any>;
+UserSchema.methods.toJSON = function (): Record<string, unknown> {
+  const obj = this.toObject() as Record<string, unknown>;
   delete obj.password;
   return obj;
 };
