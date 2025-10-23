@@ -52,6 +52,12 @@ const SignupSchema = Yup.object().shape({
     .max(100, "Age cannot exceed 100")
     .required("Age is required")
     .typeError("Age must be a number"),
+  city: Yup.string()
+    .min(2, "City must be at least 2 characters")
+    .required("City is required"),
+  emirate: Yup.string()
+    .min(2, "Emirate must be at least 2 characters")
+    .required("Emirate is required"),
   password: Yup.string()
     .min(8, "Password must be at least 8 characters")
     .matches(
@@ -86,6 +92,8 @@ export default function RenterSignupForm({ onSubmit, isLoading = false }: Renter
         phoneNumber: "",
         gender: "male",
         age: "",
+        city: "",
+        emirate: "",
         password: "",
         confirmPassword: "",
         agreeToTerms: false,
@@ -274,6 +282,61 @@ export default function RenterSignupForm({ onSubmit, isLoading = false }: Renter
                   />
                   <ErrorMessage
                     name="age"
+                    component="p"
+                    className="text-sm text-red-500"
+                  />
+                </div>
+              </div>
+
+              {/* Address Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2 animate-slide-left">
+                  <Label
+                    htmlFor="city"
+                    className="text-sm font-semibold text-gray-700"
+                  >
+                    City
+                  </Label>
+                  <Field
+                    name="city"
+                    as={Input}
+                    id="city"
+                    type="text"
+                    placeholder="Dubai"
+                    className={`bg-white/70 border-gray-200 focus:border-orange-400 focus:ring-orange-400/20 transition-all duration-300 ${
+                      errors.city && touched.city
+                        ? "border-red-400"
+                        : ""
+                    }`}
+                  />
+                  <ErrorMessage
+                    name="city"
+                    component="p"
+                    className="text-sm text-red-500"
+                  />
+                </div>
+
+                <div className="space-y-2 animate-slide-right">
+                  <Label
+                    htmlFor="emirate"
+                    className="text-sm font-semibold text-gray-700"
+                  >
+                    Emirate
+                  </Label>
+                  <Field
+                    name="emirate"
+                    as={Input}
+                    id="emirate"
+                    type="text"
+                    placeholder="Dubai"
+                    className={`bg-white/70 border-gray-200 focus:border-orange-400 focus:ring-orange-400/20 transition-all duration-300 ${
+                      errors.emirate && touched.emirate
+                        ? "border-red-400"
+                        : ""
+                    }`}
+                  />
+                  <ErrorMessage
+                    name="emirate"
                     component="p"
                     className="text-sm text-red-500"
                   />

@@ -148,3 +148,42 @@ export const getProfile = async (req: any, res: Response) => {
     return errorResponse(res, 500, "Failed to fetch profile", error);
   }
 };
+
+// Google OAuth
+export const googleAuth = async (req: Request, res: Response) => {
+  try {
+    const { googleId, email, name, image } = req.body;
+
+    let user = await User.findOne({ email });
+    
+    if (!user) {
+      // Create new user with Google data
+      const [fname, ...lnameArr] = name.split(' ');
+      user = new User({
+        fname,
+        lname: lnameArr.join(' ') || '',
+        email,
+        googleId,
+        profileImage: image,
+        role: "renter", // Default role for Google users
+        isVerified: true // Google users are pre-verified
+      });
+      await user.save();
+    } else if (!user.googleId) {
+      // Link existing account with Google
+      user.googleId = googleId;
+      user.profileImage = image;
+      await user.save();
+    }
+
+    const token = generateToken({
+      id: user._id.toString(),
+      email: user.email,
+      role: user.role
+    });
+
+    return successResponse(res, "Google authentication successful", { token, user });
+  } catch (error) {
+    return errorResponse(res, 500, "Google authentication failed", error);
+  }
+};

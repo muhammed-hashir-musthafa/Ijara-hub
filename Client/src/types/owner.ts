@@ -1,3 +1,49 @@
+export interface OwnerStats {
+  totalProperties: number;
+  roomCount: number;
+  carCount: number;
+  averageRating: number;
+  reviewCount: number;
+}
+
+export interface CompanyDetails {
+  companyName?: string;
+  companyAddress?: {
+    place?: string;
+    pincode?: number;
+  };
+  companyEmail?: string;
+  isCompanyEmailVerified?: boolean;
+  isCompanyVerified?: boolean;
+  companyPhone?: string;
+  since?: number;
+  bio?: string;
+}
+
+export interface Address {
+  street?: string;
+  city?: string;
+  emirate?: string;
+  zipCode?: string;
+}
+
+export interface OwnerProfile {
+  _id: string;
+  fname: string;
+  lname: string;
+  email: string;
+  phone: string;
+  role: string;
+  address?: Address;
+  profileImage?: string;
+  companyDetails?: CompanyDetails;
+  isVerified: boolean;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  stats: OwnerStats;
+}
+
 export type MetricCardProps = {
   title: string;
   value: number;
@@ -13,15 +59,16 @@ export interface Property {
   title: string;
   type: PropertyType;
   category: PropertyCategory;
-  location: string;
+  address?: {
+    place?: string;
+    pincode?: number;
+  };
   price: number;
   currency: string;
   status: PropertyStatus;
   images: string[];
   rating: number;
   reviewCount: number;
-  bookings: number;
-  revenue: number;
   createdAt: string;
   amenities: string[];
   guests?: number;
@@ -31,6 +78,20 @@ export interface Property {
   bathrooms?: string;
   area?: string;
   lastUpdated?: string;
+  // Room specific fields
+  roomNumber?: string;
+  roomType?: string;
+  floor?: number;
+  // Car specific fields
+  brand?: string;
+  model?: string;
+  year?: number;
+  licensePlate?: string;
+  fuelType?: string;
+  transmission?: string;
+  color?: string;
+  // Common fields
+  pincode?: number;
   owner?: {
     id: string;
     name: string;

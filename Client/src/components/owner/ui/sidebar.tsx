@@ -1,13 +1,12 @@
-// File: components/owner/ui/Sidebar.tsx
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BarChart3,
   Building2,
-  Calendar,
+  // Calendar,
   CheckCircle,
   Compass,
   LayoutDashboard,
@@ -19,26 +18,24 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/base/ui/badge";
 import Image from "next/image";
+import { getUserById } from "@/services/userService";
+import { getOwnerDashboardStats, DashboardStats } from "@/services/dashboardService";
+import { getConversations } from "@/services/messageService";
+import { User } from "@/types/auth";
+import { Conversation } from "@/types/message";
+import { getCookie } from "@/lib/cookies";
 
-const ownerData = {
-  name: "John Doe",
-  email: "john.doe@example.com",
-  avatar:
-    "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face",
-  verified: true,
-};
-
-const navigationItems = [
+const getNavigationItems = (stats: DashboardStats | null, unreadCount: number) => [
   { title: "Dashboard", url: "/owner", icon: LayoutDashboard, badge: null },
   {
     title: "My Properties",
     url: "/owner/properties",
     icon: Building2,
-    badge: "12",
+    badge: stats?.totalProperties || 0,
   },
-  { title: "Bookings", url: "/owner/bookings", icon: Calendar, badge: "3" },
+  // { title: "Bookings", url: "/owner/bookings", icon: Calendar, badge: null },
   { title: "Analytics", url: "/owner/analytics", icon: BarChart3, badge: null },
-  { title: "Messages", url: "/messages", icon: MessageSquare, badge: "5" },
+  { title: "Messages", url: "/owner/messages", icon: MessageSquare, badge: unreadCount > 0 ? unreadCount : null },
 ];
 
 const quickActions = [
@@ -48,8 +45,45 @@ const quickActions = [
 export default function Sidebar() {
   const [isCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
   const pathname = usePathname();
   const currentPath = useMemo(() => pathname || "/owner", [pathname]);
+  
+  const navigationItems = useMemo(() => getNavigationItems(stats, unreadCount), [stats, unreadCount]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const userId = getCookie('userId');
+        if (userId) {
+          const [userResponse, statsResponse, conversationsResponse] = await Promise.all([
+            getUserById(userId),
+            getOwnerDashboardStats(userId),
+            getConversations()
+          ]);
+          
+          setUser(userResponse?.data?.user);
+          setStats(statsResponse);
+          
+          // Calculate unread conversations count
+          const conversations = conversationsResponse?.data?.conversations || [];
+          const unreadConversations = conversations.filter((conv: Conversation) => {
+            const userUnreadCount = conv.unreadCount instanceof Map 
+              ? conv.unreadCount.get(userId) || 0
+              : (conv.unreadCount as Record<string, number>)?.[userId] || 0;
+            return userUnreadCount > 0;
+          });
+          setUnreadCount(unreadConversations.length);
+        }
+      } catch (error) {
+        console.error('Failed to fetch data:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const SidebarContent = (
     <div className="relative z-10 flex flex-col h-full">
@@ -97,7 +131,9 @@ export default function Sidebar() {
                   />
                   <span className="font-medium">{item.title}</span>
                   {item.badge && (
-                    <Badge className="ml-auto bg-amber-500 text-white text-xs">
+                    <Badge className={`ml-auto text-white text-xs ${
+                      item.title === 'Messages' ? 'bg-red-500' : 'bg-amber-500'
+                    }`}>
                       {item.badge}
                     </Badge>
                   )}
@@ -134,31 +170,51 @@ export default function Sidebar() {
 
       {/* User Profile */}
       <div className="p-4 border-t border-gray-700/50">
-        <Link
-          href="/owner/profile"
-          className="w-full flex items-center space-x-3 p-4 rounded-xl hover:bg-white/10 transition-all duration-300 group"
-        >
-          <div className="relative">
-            <Image
-              width={40}
-              height={40}
-              src={ownerData.avatar}
-              alt={ownerData.name}
-              className="w-10 h-10 rounded-full object-cover group-hover:scale-110 transition-transform"
-            />
-            {ownerData.verified && (
-              <div className="absolute -bottom-1 -right-1 bg-green-500 p-1 rounded-full">
-                <CheckCircle className="h-3 w-3 text-white" />
-              </div>
-            )}
-          </div>
-          <div className="flex-1 text-left">
-            <div className="font-semibold text-white group-hover:text-amber-400 transition-colors">
-              {ownerData.name}
+        {user ? (
+          <Link
+            href="/owner/profile"
+            className="w-full flex items-center space-x-3 p-4 rounded-xl hover:bg-white/10 transition-all duration-300 group"
+          >
+            <div className="relative">
+              {user.profileImage ? (
+                <Image
+                  width={40}
+                  height={40}
+                  src={user.profileImage}
+                  alt={`${user.fname} ${user.lname}`}
+                  className="w-10 h-10 rounded-full object-cover group-hover:scale-110 transition-transform"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <span className="text-sm font-bold text-white">
+                    {user.fname?.[0]}{user.lname?.[0]}
+                  </span>
+                </div>
+              )}
+              {user.isVerified && (
+                <div className="absolute -bottom-1 -right-1 bg-green-500 p-1 rounded-full">
+                  <CheckCircle className="h-3 w-3 text-white" />
+                </div>
+              )}
             </div>
-            <div className="text-sm text-gray-400">Premium Host</div>
+            <div className="flex-1 text-left">
+              <div className="font-semibold text-white group-hover:text-amber-400 transition-colors">
+                {user.fname} {user.lname}
+              </div>
+              <div className="text-sm text-gray-400">Premium Host</div>
+            </div>
+          </Link>
+        ) : (
+          <div className="w-full flex items-center space-x-3 p-4 rounded-xl">
+            <div className="animate-pulse flex items-center space-x-3 w-full">
+              <div className="w-10 h-10 bg-gray-600 rounded-full"></div>
+              <div className="flex-1">
+                <div className="h-4 bg-gray-600 rounded w-20 mb-1"></div>
+                <div className="h-3 bg-gray-600 rounded w-24"></div>
+              </div>
+            </div>
           </div>
-        </Link>
+        )}
       </div>
     </div>
   );

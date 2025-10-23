@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import toast from "react-hot-toast";
 import {
   Card,
   CardContent,
@@ -10,61 +11,164 @@ import {
 } from "@/components/base/ui/card";
 import { Badge } from "@/components/base/ui/badge";
 import { Button } from "@/components/base/ui/button";
+import { Input } from "@/components/base/ui/input";
+import { Textarea } from "@/components/base/ui/textarea";
 import {
   MapPin,
   Calendar,
   Star,
-  Trophy,
   Edit,
   CheckCircle,
-  Crown,
   Building,
-  Activity,
   MessageSquare,
   Briefcase,
+  Save,
+  X,
 } from "lucide-react";
+import { getProfile } from "@/services/authService";
+import { updateUser } from "@/services/userService";
+import { getOwnerDashboardStats } from "@/services/dashboardService";
+import { User, UpdateUserPayload } from "@/types/auth";
+import { DashboardStats } from "@/services/dashboardService";
 
 const OwnerProfilePage = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [formData, setFormData] = useState<UpdateUserPayload>({});
+
+  const fetchProfileData = async () => {
+    try {
+      setIsLoading(true);
+      const profileResponse = await getProfile();
+      const userData = profileResponse.data.user;
+      setUser(userData);
+      setFormData({
+        fname: userData.fname,
+        lname: userData.lname,
+        email: userData.email,
+        phone: userData.phone,
+        gender: userData.gender,
+        age: userData.age,
+        address: userData.address,
+        companyDetails: userData.companyDetails,
+      });
+
+      if (userData._id) {
+        const statsResponse = await getOwnerDashboardStats(userData._id);
+        setStats(statsResponse);
+      }
+    } catch (error) {
+      console.error("Failed to fetch profile data:", error);
+      toast.error("Failed to load profile data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!user?._id) return;
+
+    try {
+      setIsSaving(true);
+      const response = await updateUser(user._id, formData);
+      setUser(response.user);
+      setIsEditing(false);
+      toast.success("Profile updated successfully!");
+      // Refresh profile data to ensure consistency
+      await fetchProfileData();
+    } catch (error) {
+      console.error("Failed to update profile:", error);
+      toast.error("Failed to update profile");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    if (user) {
+      setFormData({
+        fname: user.fname,
+        lname: user.lname,
+        email: user.email,
+        phone: user.phone,
+        gender: user.gender,
+        age: user.age,
+        address: user.address,
+        companyDetails: user.companyDetails,
+      });
+    }
+    setIsEditing(false);
+  };
 
   useEffect(() => {
+    fetchProfileData();
     setTimeout(() => setIsVisible(true), 100);
   }, []);
 
-  const ownerData = {
-    name: "Alexander Hamilton",
-    email: "alex.hamilton@luxuryestate.com",
-    phone: "+971 50 555 0123",
-    location: "Dubai, UAE",
-    avatar:
-      "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=400&fit=crop&crop=face",
-    coverPhoto:
-      "https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200&h=400&fit=crop",
-    joinedDate: "January 2019",
-    company: "Hamilton Luxe Estates",
-    companyType: "Luxury Property Management",
-    license: "DRE #LUX98432",
-    founded: "2015",
-    employees: 38,
-    website: "https://hamiltonluxe.com",
-    properties: 24,
-    totalEarnings: "AED 2,850,000",
-    occupancyRate: 87,
-    rating: 4.95,
-    reviews: 1247,
-    responseRate: 99,
-    responseTime: "Within 15 minutes",
-    superhost: true,
-    yearsHosting: 5,
-    languages: ["English", "Arabic", "French", "Spanish"],
-    specialties: [
-      "Luxury Villas",
-      "Beachfront Properties",
-      "City Penthouses",
-      "Desert Resorts",
-    ],
-    bio: "Luxury hospitality expert with over 15 years of experience in premium accommodations. I specialize in creating unforgettable experiences for discerning guests.",
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-100 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">Failed to load profile data</p>
+        </div>
+      </div>
+    );
+  }
+
+  const fullName = isEditing
+    ? `${formData.fname || ""} ${formData.lname || ""}`.trim() || "User"
+    : `${user.fname} ${user.lname}`;
+  const location = user.address
+    ? `${user.address.city || ""}, ${user.address.emirate || ""}`
+        .trim()
+        .replace(/^,\s*|,\s*$/g, "")
+    : "Location not specified";
+  const joinedDate = user.createdAt
+    ? new Date(user.createdAt).toLocaleDateString("en-US", {
+        month: "long",
+        year: "numeric",
+      })
+    : "Recently joined";
+
+  // Generate initials for avatar
+  const getInitials = (fname: string, lname: string) => {
+    return `${fname.charAt(0)}${lname.charAt(0)}`.toUpperCase();
   };
+
+  const initials = isEditing
+    ? getInitials(formData.fname || "U", formData.lname || "U")
+    : getInitials(user.fname, user.lname);
+
+  // Generate color based on name
+  const getAvatarColor = (name: string) => {
+    const colors = [
+      "from-emerald-500 to-teal-500",
+      "from-blue-500 to-cyan-500",
+      "from-purple-500 to-pink-500",
+      "from-orange-500 to-red-500",
+      "from-indigo-500 to-purple-500",
+      "from-green-500 to-emerald-500",
+    ];
+    const index = name.charCodeAt(0) % colors.length;
+    return colors[index];
+  };
+
+  const avatarGradient = getAvatarColor(fullName);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-100 relative overflow-hidden">
@@ -81,15 +185,8 @@ const OwnerProfilePage = () => {
       >
         {/* Header */}
         <div className="relative mb-10">
-          <div className="h-80 rounded-3xl overflow-hidden shadow-2xl relative group">
-            <Image
-              src={ownerData.coverPhoto}
-              alt="Cover"
-              fill
-              className="object-cover transition-transform duration-700 group-hover:scale-105 "
-              sizes="100vw"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+          <div className="h-80 rounded-3xl overflow-hidden shadow-2xl relative group bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
 
             <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
               <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
@@ -97,71 +194,102 @@ const OwnerProfilePage = () => {
                 <div className="flex flex-col sm:flex-row sm:items-end sm:space-x-6">
                   <div className="relative self-center sm:self-auto mb-4 sm:mb-0">
                     <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full border-4 border-white shadow-2xl overflow-hidden">
-                      <Image
-                        src={ownerData.avatar}
-                        alt={ownerData.name}
-                        width={144}
-                        height={144}
-                        className="w-full h-full object-cover "
-                      />
+                      {user.profileImage ? (
+                        <Image
+                          src={user.profileImage}
+                          alt={fullName}
+                          width={144}
+                          height={144}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div
+                          className={`w-full h-full bg-gradient-to-br ${avatarGradient} flex items-center justify-center text-white font-bold text-2xl sm:text-3xl`}
+                        >
+                          {initials}
+                        </div>
+                      )}
                     </div>
 
-                    {/* Status Badges */}
-                    <div className="absolute -bottom-2 -right-2 bg-gradient-to-r from-emerald-500 to-teal-500 p-2 rounded-full shadow-lg">
-                      <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-                    </div>
-                    <div className="absolute -top-2 -left-2 bg-gradient-to-r from-amber-500 to-orange-500 p-2 rounded-full shadow-lg">
-                      <Crown className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                    </div>
+                    {/* Status Badge */}
+                    {user.isVerified && (
+                      <div className="absolute -bottom-2 -right-2 bg-gradient-to-r from-emerald-500 to-teal-500 p-2 rounded-full shadow-lg">
+                        <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                      </div>
+                    )}
                   </div>
 
                   <div className="text-white mb-2 sm:mb-4 text-center sm:text-left">
                     <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 flex items-center justify-center sm:justify-start animate-slide-up">
-                      {ownerData.name}
-                      {ownerData.superhost && (
-                        <Trophy className="h-6 w-6 sm:h-8 sm:w-8 ml-2 text-yellow-400" />
-                      )}
+                      {fullName}
                     </h1>
 
                     {/* Badges */}
                     <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-3">
-                      <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0 text-xs sm:text-sm">
-                        <Trophy className="h-3 w-3 mr-1" /> Superhost
-                      </Badge>
                       <Badge className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-0 text-xs sm:text-sm">
                         <Building className="h-3 w-3 mr-1" />{" "}
-                        {ownerData.properties} Properties
+                        {stats?.totalProperties || 0} Properties
                       </Badge>
-                      <div className="flex items-center space-x-1 text-xs sm:text-sm">
-                        <Star className="h-4 w-4 fill-white" />
-                        <span className="font-semibold">
-                          {ownerData.rating}
-                        </span>
-                        <span className="opacity-80">
-                          ({ownerData.reviews} reviews)
-                        </span>
-                      </div>
+                      {stats && stats.averageRating > 0 && (
+                        <div className="flex items-center space-x-1 text-xs sm:text-sm">
+                          <Star className="h-4 w-4 fill-white" />
+                          <span className="font-semibold">
+                            {stats.averageRating}
+                          </span>
+                          <span className="opacity-80">
+                            ({stats.totalReviews} reviews)
+                          </span>
+                        </div>
+                      )}
                     </div>
 
-                    {/* Location & Hosting */}
+                    {/* Location, ID & Joined */}
                     <div className="flex flex-col sm:flex-row sm:flex-wrap items-center justify-center sm:justify-start gap-3 text-xs sm:text-sm opacity-90">
+                      <div className="flex items-center space-x-2 bg-white/20 px-2 py-1 rounded-full">
+                        <span className="font-mono font-semibold">
+                          ID:{user.customId}
+                        </span>
+                      </div>
                       <div className="flex items-center space-x-2">
                         <MapPin className="h-4 w-4" />
-                        <span>{ownerData.location}</span>
+                        <span>{location}</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Calendar className="h-4 w-4" />
-                        <span>{ownerData.yearsHosting} years hosting</span>
+                        <span>Joined {joinedDate}</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Edit Button */}
-                <div className="flex justify-center md:justify-end">
-                  <Button className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-0 shadow-lg hover:scale-105 transition-all text-sm sm:text-base px-4 sm:px-6 py-2 sm:py-3">
-                    <Edit className="h-4 w-4 mr-2" /> Edit Profile
-                  </Button>
+                {/* Edit/Save/Cancel Buttons */}
+                <div className="flex justify-center md:justify-end gap-2">
+                  {!isEditing ? (
+                    <Button
+                      onClick={() => setIsEditing(true)}
+                      className="bg-gradient-to-r from-orange-600 to-amber-600 text-white border-0 shadow-lg hover:scale-105 transition-all text-sm sm:text-base px-4 sm:px-6 py-2 sm:py-3"
+                    >
+                      <Edit className="h-4 w-4 mr-2" /> Edit Profile
+                    </Button>
+                  ) : (
+                    <>
+                      <Button
+                        onClick={handleSave}
+                        disabled={isSaving}
+                        className="bg-gradient-to-r from-orange-600 to-amber-600 text-white border-0 shadow-lg hover:scale-105 transition-all text-sm sm:text-base px-4 sm:px-6 py-2 sm:py-3"
+                      >
+                        <Save className="h-4 w-4 mr-2" />{" "}
+                        {isSaving ? "Saving..." : "Save"}
+                      </Button>
+                      <Button
+                        onClick={handleCancel}
+                        variant="outline"
+                        className="text-sm sm:text-base px-4 sm:px-6 py-2 sm:py-3"
+                      >
+                        <X className="h-4 w-4 mr-2" /> Cancel
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -169,35 +297,23 @@ const OwnerProfilePage = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
           {[
             {
               label: "Properties",
-              value: ownerData.properties,
+              value: stats?.totalProperties || 0,
               icon: Building,
               color: "from-emerald-500 to-teal-500",
             },
-            // {
-            //   label: "Earnings",
-            //   value: ownerData.totalEarnings,
-            //   icon: DollarSign,
-            //   color: "from-green-500 to-emerald-500",
-            // },
             {
-              label: "Occupancy",
-              value: `${ownerData.occupancyRate}%`,
-              icon: Activity,
-              color: "from-blue-500 to-cyan-500",
-            },
-            {
-              label: "Response Rate",
-              value: `${ownerData.responseRate}%`,
+              label: "Total Reviews",
+              value: stats?.totalReviews || 0,
               icon: MessageSquare,
               color: "from-purple-500 to-pink-500",
             },
             {
               label: "Avg Rating",
-              value: ownerData.rating,
+              value: stats?.averageRating || 0,
               icon: Star,
               color: "from-amber-500 to-orange-500",
             },
@@ -235,41 +351,264 @@ const OwnerProfilePage = () => {
             <CardContent className="space-y-4 text-gray-700">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <p className="font-semibold">Company Name</p>
-                  <p>{ownerData.company}</p>
+                  <p className="font-semibold mb-2">First Name</p>
+                  {isEditing ? (
+                    <Input
+                      value={formData.fname || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, fname: e.target.value })
+                      }
+                      placeholder="First Name"
+                    />
+                  ) : (
+                    <p>{user.fname}</p>
+                  )}
                 </div>
                 <div>
-                  <p className="font-semibold">Business Type</p>
-                  <p>{ownerData.companyType}</p>
+                  <p className="font-semibold mb-2">Last Name</p>
+                  {isEditing ? (
+                    <Input
+                      value={formData.lname || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, lname: e.target.value })
+                      }
+                      placeholder="Last Name"
+                    />
+                  ) : (
+                    <p>{user.lname}</p>
+                  )}
                 </div>
                 <div>
-                  <p className="font-semibold">License</p>
-                  <p>{ownerData.license}</p>
+                  <p className="font-semibold mb-2">Email</p>
+                  {isEditing ? (
+                    <Input
+                      value={formData.email || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
+                      placeholder="Email"
+                      type="email"
+                    />
+                  ) : (
+                    <p>{user.email}</p>
+                  )}
                 </div>
                 <div>
-                  <p className="font-semibold">Founded</p>
-                  <p>{ownerData.founded}</p>
+                  <p className="font-semibold mb-2">Phone</p>
+                  {isEditing ? (
+                    <Input
+                      type="tel"
+                      value={formData.phone || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, phone: e.target.value })
+                      }
+                      placeholder="Phone"
+                    />
+                  ) : (
+                    <p>{user.phone}</p>
+                  )}
                 </div>
                 <div>
-                  <p className="font-semibold">Employees</p>
-                  <p>{ownerData.employees}</p>
+                  <p className="font-semibold mb-2">Gender</p>
+                  {isEditing ? (
+                    <select
+                      value={formData.gender || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          gender: e.target.value as "male" | "female" | "other",
+                        })
+                      }
+                      className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    >
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="other">Other</option>
+                    </select>
+                  ) : (
+                    <p className="capitalize">{user.gender}</p>
+                  )}
                 </div>
                 <div>
-                  <p className="font-semibold">Website</p>
-                  <a
-                    href={ownerData.website}
-                    target="_blank"
-                    className="text-emerald-600 hover:underline"
-                  >
-                    {ownerData.website}
-                  </a>
+                  <p className="font-semibold mb-2">Age</p>
+                  {isEditing ? (
+                    <Input
+                      type="text"
+                      value={formData.age?.toString() || ""}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setFormData({
+                          ...formData,
+                          age: value ? parseInt(value) : 18,
+                        });
+                      }}
+                      placeholder="Age"
+                    />
+                  ) : (
+                    <p>{user.age}</p>
+                  )}
                 </div>
+                <div>
+                  <p className="font-semibold mb-2">City</p>
+                  {isEditing ? (
+                    <Input
+                      value={formData.address?.city || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          address: {
+                            ...formData.address,
+                            city: e.target.value,
+                          },
+                        })
+                      }
+                      placeholder="City"
+                    />
+                  ) : (
+                    <p>{user.address?.city || "Not specified"}</p>
+                  )}
+                </div>
+                <div>
+                  <p className="font-semibold mb-2">Emirate</p>
+                  {isEditing ? (
+                    <Input
+                      value={formData.address?.emirate || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          address: {
+                            ...formData.address,
+                            emirate: e.target.value,
+                          },
+                        })
+                      }
+                      placeholder="Emirate"
+                    />
+                  ) : (
+                    <p>{user.address?.emirate || "Not specified"}</p>
+                  )}
+                </div>
+                {user.companyDetails && (
+                  <>
+                    <div>
+                      <p className="font-semibold mb-2">Company Name</p>
+                      {isEditing ? (
+                        <Input
+                          value={formData.companyDetails?.companyName || ""}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              companyDetails: {
+                                ...formData.companyDetails!,
+                                companyName: e.target.value,
+                              },
+                            })
+                          }
+                          placeholder="Company Name"
+                        />
+                      ) : (
+                        <p>{user.companyDetails.companyName}</p>
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-semibold mb-2">Company Email</p>
+                      {isEditing ? (
+                        <Input
+                          value={formData.companyDetails?.companyEmail || ""}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              companyDetails: {
+                                ...formData.companyDetails!,
+                                companyEmail: e.target.value,
+                              },
+                            })
+                          }
+                          placeholder="Company Email"
+                          type="email"
+                        />
+                      ) : (
+                        <p>{user.companyDetails.companyEmail}</p>
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-semibold mb-2">Company Phone</p>
+                      {isEditing ? (
+                        <Input
+                          type="tel"
+                          value={
+                            formData.companyDetails?.companyPhone?.toString() ||
+                            ""
+                          }
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setFormData({
+                              ...formData,
+                              companyDetails: {
+                                ...formData.companyDetails!,
+                                companyPhone: value ? parseInt(value) : 0,
+                              },
+                            });
+                          }}
+                          placeholder="Company Phone"
+                        />
+                      ) : (
+                        <p>{user.companyDetails.companyPhone}</p>
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-semibold mb-2">Since</p>
+                      {isEditing ? (
+                        <Input
+                          type="text"
+                          value={
+                            formData.companyDetails?.since?.toString() || ""
+                          }
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            setFormData({
+                              ...formData,
+                              companyDetails: {
+                                ...formData.companyDetails!,
+                                since: value
+                                  ? parseInt(value)
+                                  : new Date().getFullYear(),
+                              },
+                            });
+                          }}
+                          placeholder="Since Year"
+                        />
+                      ) : (
+                        <p>{user.companyDetails.since}</p>
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
 
-              <div>
-                <p className="font-semibold mt-4 mb-2">About</p>
-                <p className="leading-relaxed">{ownerData.bio}</p>
-              </div>
+              {user.companyDetails && (
+                <div>
+                  <p className="font-semibold mt-4 mb-2">About</p>
+                  {isEditing ? (
+                    <Textarea
+                      value={formData.companyDetails?.bio || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          companyDetails: {
+                            ...formData.companyDetails!,
+                            bio: e.target.value,
+                          },
+                        })
+                      }
+                      placeholder="Tell us about your company..."
+                      rows={4}
+                    />
+                  ) : (
+                    <p className="leading-relaxed">{user.companyDetails.bio}</p>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
 

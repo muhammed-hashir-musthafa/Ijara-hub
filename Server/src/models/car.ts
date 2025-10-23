@@ -42,7 +42,6 @@ const CarSchema = new mongoose.Schema<ICar, CarModel, ICarMethods>(
     licensePlate: {
       type: String,
       required: [true, "License plate is required"],
-      unique: true,
       trim: true,
       uppercase: true,
       match: [/^[A-Z0-9\s\-]{3,15}$/, "Invalid license plate format"],
@@ -125,6 +124,10 @@ const CarSchema = new mongoose.Schema<ICar, CarModel, ICarMethods>(
       ref: "User",
       required: [true, "Owner is required"],
     },
+    reviews: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Review",
+    }],
   },
   {
     timestamps: true,
@@ -133,9 +136,10 @@ const CarSchema = new mongoose.Schema<ICar, CarModel, ICarMethods>(
   }
 );
 
+
+
 // Indexes
 CarSchema.index({ licensePlate: 1 }, { unique: true });
-CarSchema.index({ status: 1 });
 CarSchema.index({ brand: 1, model: 1 });
 CarSchema.index({ category: 1 });
 CarSchema.index({ dailyRate: 1 });
@@ -145,6 +149,25 @@ CarSchema.index({ owner: 1 });
 // Virtual for full car name
 CarSchema.virtual("fullName").get(function () {
   return `${this.year} ${this.brand} ${this.model}`;
+});
+
+// Virtual for review count
+CarSchema.virtual('reviewCount').get(function() {
+  return this.reviews ? this.reviews.length : 0;
+});
+
+// Virtual for average rating
+CarSchema.virtual('averageRating').get(function() {
+  if (!this.reviews || this.reviews.length === 0) return 0;
+  
+  // Check if reviews are populated objects (not just ObjectIds)
+  if (this.reviews[0] && typeof this.reviews[0] === 'object' && 'rating' in this.reviews[0]) {
+    const populatedReviews = this.reviews as unknown as { rating?: number }[];
+    const totalRating = populatedReviews.reduce((sum: number, review: { rating?: number }) => sum + (review.rating || 0), 0);
+    return Math.round((totalRating / populatedReviews.length) * 10) / 10;
+  }
+  
+  return 0;
 });
 
 // Method to calculate total rental cost

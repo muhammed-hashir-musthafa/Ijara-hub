@@ -1,4 +1,5 @@
 import UserProfilePage from "@/components/renter/containers/Profile/ProfilePage";
+import { RouteGuard } from "@/components/auth/RouteGuard";
 import { Metadata } from "next";
 import React from "react";
 
@@ -27,9 +28,11 @@ export const metadata: Metadata = {
 
 const UserProfile = () => {
   return (
-    <div>
-      <UserProfilePage />
-    </div>
+    <RouteGuard allowedRoles={['renter', 'owner', 'admin']}>
+      <div>
+        <UserProfilePage />
+      </div>
+    </RouteGuard>
   );
 };
 

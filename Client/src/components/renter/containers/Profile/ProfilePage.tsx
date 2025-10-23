@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import toast from "react-hot-toast";
+import { AxiosError } from "axios";
 import {
   Card,
   CardContent,
@@ -8,48 +10,181 @@ import {
   CardTitle,
 } from "@/components/base/ui/card";
 import { Badge } from "@/components/base/ui/badge";
+import { Button } from "@/components/base/ui/button";
 import {
   User,
   Mail,
   Phone,
   MapPin,
   Calendar,
-  Star,
   Trophy,
   CheckCircle,
-  Heart,
-  Home,
+  Edit,
+  Save,
+  X,
 } from "lucide-react";
 import Image from "next/image";
+import { getProfile } from "@/services/authService";
+import { updateUser } from "@/services/userService";
+import { User as UserType, UpdateUserPayload } from "@/types/auth";
+import ProfileEditForm from "../../forms/ProfileEditForm";
 
 const UserProfilePage = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const [user, setUser] = useState<UserType | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [formData, setFormData] = useState<UpdateUserPayload>({});
+
+  const fetchProfile = async () => {
+    try {
+      setIsLoading(true);
+      const response = await getProfile();
+      const userData = response?.data?.user;
+      setUser(userData);
+      setFormData({
+        fname: userData.fname,
+        lname: userData.lname,
+        email: userData.email,
+        phone: userData.phone,
+        gender: userData.gender,
+        age: userData.age,
+        address: userData.address,
+      });
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        if (error?.response?.status === 401) {
+          localStorage.removeItem("token");
+          window.location.href = "/login";
+          return;
+        }
+        toast.error(error?.response?.data?.message || "Failed to load profile");
+        console.error(
+          "Profile fetch failed:",
+          error.response?.data?.message || error.message
+        );
+      } else if (error instanceof Error) {
+        console.error("Profile fetch failed:", error.message);
+        toast.error(`${error?.message}`);
+      } else {
+        console.error("Profile fetch failed:", error);
+        toast.error(`Something went wrong! Please try again later`);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!user?._id) return;
+
+    try {
+      setIsSaving(true);
+      const response = await updateUser(user._id, formData);
+      setUser(response.user);
+      setIsEditing(false);
+      toast.success("Profile updated successfully!");
+      await fetchProfile();
+    } catch (error) {
+      console.error("Failed to update profile:", error);
+      toast.error("Failed to update profile");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    if (user) {
+      setFormData({
+        fname: user.fname,
+        lname: user.lname,
+        email: user.email,
+        phone: user.phone,
+        gender: user.gender,
+        age: user.age,
+        address: user.address,
+      });
+    }
+    setIsEditing(false);
+  };
 
   useEffect(() => {
     setTimeout(() => setIsVisible(true), 100);
+    fetchProfile();
   }, []);
 
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-orange-50 to-yellow-100 pt-16 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">No profile data available</p>
+        </div>
+      </div>
+    );
+  }
+
+  const fullName = isEditing
+    ? `${formData.fname || ""} ${formData.lname || ""}`.trim() || "User"
+    : `${user.fname} ${user.lname}`;
+
   const userData = {
-    name: "Emma Richardson",
-    isVerified: true,
-    email: "emma.richardson@email.com",
-    phone: "+971 50 987 6543",
-    location: "Dubai Marina, UAE",
-    avatar:
-      "https://images.unsplash.com/photo-1494790108755-2616b612b77c?w=400&h=400&fit=crop&crop=face",
-    coverPhoto:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&h=400&fit=crop",
-    joinedDate: "June 2021",
-    rentalsCompleted: 18,
-    totalSpent: "AED 85,000",
-    savedProperties: 12,
-    wishlistItems: 6,
-    membershipLevel: "Gold",
-    rating: 4.7,
-    bio: "Tenant and property seeker. I enjoy exploring premium rentals that balance comfort, design, and location.",
-    preferredPropertyTypes: ["Apartments", "Penthouses", "Villas"],
-    amenities: ["Pool Access", "Gym", "High-Speed Internet", "Pet Friendly"],
+    name: fullName,
+    isVerified: user.isVerified,
+    email: user.email,
+    phone: user.phone,
+    location: user.address
+      ? `${user.address.city || ""}, ${user.address.emirate || "UAE"}`.trim()
+      : "UAE",
+    joinedDate: user.createdAt
+      ? new Date(user.createdAt).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+        })
+      : "Unknown",
+    membershipLevel:
+      user.role === "owner"
+        ? "Premium"
+        : user.role === "admin"
+        ? "Admin"
+        : "Standard",
   };
+
+  // Generate initials for avatar
+  const getInitials = (fname: string, lname: string) => {
+    return `${fname.charAt(0)}${lname.charAt(0)}`.toUpperCase();
+  };
+  
+  const initials = isEditing
+    ? getInitials(formData.fname || "U", formData.lname || "U")
+    : getInitials(user.fname, user.lname);
+  
+  // Generate color based on name
+  const getAvatarColor = (name: string) => {
+    const colors = [
+      'from-orange-500 to-red-500',
+      'from-blue-500 to-cyan-500', 
+      'from-purple-500 to-pink-500',
+      'from-emerald-500 to-teal-500',
+      'from-indigo-500 to-purple-500',
+      'from-amber-500 to-orange-500'
+    ];
+    const index = name.charCodeAt(0) % colors.length;
+    return colors[index];
+  };
+  
+  const avatarGradient = getAvatarColor(userData.name);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-orange-50 to-yellow-100 pt-16 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-orange-50 to-yellow-100 relative overflow-hidden pt-16">
@@ -78,13 +213,19 @@ const UserProfilePage = () => {
                 {/* Avatar */}
                 <div className="relative self-center md:self-auto">
                   <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 lg:w-36 lg:h-36 rounded-full border-4 border-white shadow-2xl overflow-hidden group-hover:scale-105 transition-transform duration-500">
-                    <Image
-                      width={144}
-                      height={144}
-                      src={userData.avatar}
-                      alt={userData.name}
-                      className="w-full h-full object-cover"
-                    />
+                    {user.profileImage ? (
+                      <Image
+                        width={144}
+                        height={144}
+                        src={user.profileImage}
+                        alt={userData.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className={`w-full h-full bg-gradient-to-br ${avatarGradient} flex items-center justify-center text-white font-bold text-xl sm:text-2xl lg:text-3xl`}>
+                        {initials}
+                      </div>
+                    )}
                   </div>
                   {userData.isVerified && (
                     <div className="absolute -bottom-2 -right-2 bg-gradient-to-r from-emerald-500 to-teal-500 p-1.5 sm:p-2 rounded-full shadow-lg animate-fade-in-right">
@@ -103,12 +244,13 @@ const UserProfilePage = () => {
                       <Trophy className="h-3 w-3 mr-1" />
                       {userData.membershipLevel} Member
                     </Badge>
-                    <div className="flex items-center space-x-1">
-                      <Star className="h-4 w-4 fill-white" />
-                      <span className="font-semibold">{userData.rating}</span>
-                    </div>
                   </div>
                   <div className="flex flex-wrap justify-center md:justify-start gap-4 text-xs sm:text-sm opacity-90">
+                    <div className="flex items-center space-x-2 bg-white/20 px-2 py-1 rounded-full">
+                      <span className="font-mono font-semibold">
+                        ID: {user.customId}
+                      </span>
+                    </div>
                     <div className="flex items-center space-x-1">
                       <MapPin className="h-4 w-4" />
                       <span>{userData.location}</span>
@@ -119,6 +261,36 @@ const UserProfilePage = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Edit/Save/Cancel Buttons */}
+                <div className="flex justify-center md:justify-end gap-2">
+                  {!isEditing ? (
+                    <Button
+                      onClick={() => setIsEditing(true)}
+                      className="bg-gradient-to-r from-orange-600 to-amber-600 text-white border-0 shadow-lg hover:scale-105 transition-all text-sm sm:text-base px-4 sm:px-6 py-2 sm:py-3"
+                    >
+                      <Edit className="h-4 w-4 mr-2" /> Edit Profile
+                    </Button>
+                  ) : (
+                    <>
+                      <Button
+                        onClick={handleSave}
+                        disabled={isSaving}
+                        className="bg-gradient-to-r from-orange-600 to-amber-600 text-white border-0 shadow-lg hover:scale-105 transition-all text-sm sm:text-base px-4 sm:px-6 py-2 sm:py-3"
+                      >
+                        <Save className="h-4 w-4 mr-2" />
+                        {isSaving ? "Saving..." : "Save"}
+                      </Button>
+                      <Button
+                        onClick={handleCancel}
+                        variant="outline"
+                        className="text-sm sm:text-base px-4 sm:px-6 py-2 sm:py-3"
+                      >
+                        <X className="h-4 w-4 mr-2" /> Cancel
+                      </Button>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -126,53 +298,56 @@ const UserProfilePage = () => {
 
         {/* Content Sections */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-          {/* About & Preferences */}
+          {/* Profile Details */}
           <div className="lg:col-span-2 space-y-6">
             <Card className="bg-white/80 backdrop-blur-lg border-0 shadow-lg animate-fade-in-up">
               <CardHeader>
                 <CardTitle className="flex items-center text-base sm:text-xl">
-                  <User className="h-5 w-5 mr-2 text-orange-600" /> About Me
+                  <User className="h-5 w-5 mr-2 text-orange-600" />
+                  {isEditing ? "Edit Profile" : "Profile Details"}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-700 mb-4 text-sm sm:text-base">
-                  {userData.bio}
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="font-semibold text-gray-800 mb-2 flex items-center">
-                      <Home className="h-4 w-4 mr-2 text-orange-500" />
-                      Preferred Properties
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {userData.preferredPropertyTypes.map((type, i) => (
-                        <Badge
-                          key={i}
-                          className="bg-gradient-to-r from-orange-500 to-yellow-500 text-white text-xs sm:text-sm"
-                        >
-                          {type}
-                        </Badge>
-                      ))}
+                {isEditing ? (
+                  <ProfileEditForm formData={formData} setFormData={setFormData} />
+                ) : (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700">
+                      <div>
+                        <p className="font-semibold mb-1">First Name</p>
+                        <p>{user.fname}</p>
+                      </div>
+                      <div>
+                        <p className="font-semibold mb-1">Last Name</p>
+                        <p>{user.lname}</p>
+                      </div>
+                      <div>
+                        <p className="font-semibold mb-1">Email</p>
+                        <p>{user.email}</p>
+                      </div>
+                      <div>
+                        <p className="font-semibold mb-1">Phone</p>
+                        <p>{user.phone}</p>
+                      </div>
+                      <div>
+                        <p className="font-semibold mb-1">Gender</p>
+                        <p className="capitalize">{user.gender}</p>
+                      </div>
+                      <div>
+                        <p className="font-semibold mb-1">Age</p>
+                        <p>{user.age}</p>
+                      </div>
+                      <div>
+                        <p className="font-semibold mb-1">City</p>
+                        <p>{user.address?.city || "Not specified"}</p>
+                      </div>
+                      <div>
+                        <p className="font-semibold mb-1">Emirate</p>
+                        <p>{user.address?.emirate || "Not specified"}</p>
+                      </div>
                     </div>
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-800 mb-2 flex items-center">
-                      <Heart className="h-4 w-4 mr-2 text-orange-500" />
-                      Amenities
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {userData.amenities.map((amenity, i) => (
-                        <Badge
-                          key={i}
-                          variant="outline"
-                          className="border-orange-300 text-orange-600 hover:bg-orange-50 text-xs sm:text-sm"
-                        >
-                          {amenity}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                )}
               </CardContent>
             </Card>
           </div>

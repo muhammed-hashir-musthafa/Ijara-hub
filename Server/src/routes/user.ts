@@ -1,10 +1,14 @@
 import express from "express";
-import { getUsers, getUserById, updateUser, deleteUser } from "../controllers/user";
+import { getUsers, getUserById, updateUser, deleteUser, getOwnerProfile } from "../controllers/user";
 import { authenticateToken, authorizeRoles } from "../middleware/auth";
 
 const router = express.Router();
 
-// All routes require authentication
+// Public routes
+// Get owner profile with stats (public for room/car detail pages)
+router.get("/:id/profile", getOwnerProfile);
+
+// All other routes require authentication
 router.use(authenticateToken);
 
 // Get all users (admin only)
