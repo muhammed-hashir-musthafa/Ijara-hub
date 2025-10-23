@@ -25,7 +25,9 @@ api.interceptors.response.use(
       deleteCookie('token');
       deleteCookie('userId');
       deleteCookie('userRole');
-      window.location.href = '/login';
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
