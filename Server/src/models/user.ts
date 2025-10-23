@@ -53,7 +53,6 @@ const UserSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
     },
     googleId: {
       type: String,
-      sparse: true,
     },
     gender: {
       type: String,
