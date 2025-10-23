@@ -1,11 +1,8 @@
 import type React from "react";
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "../globals.css";
 import { Header } from "@/components/renter/ui/header";
 import { Footer } from "@/components/renter/ui/footer";
-
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
   title: "Ijara Hub | Ijara Hub Premium Rental Service",
@@ -36,12 +33,10 @@ export default function UserLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`font-sans ${inter.variable} antialiased`}>
-        <Header />
-        <main className="min-h-screen">{children}</main>
-        <Footer />
-      </body>
-    </html>
+    <div>
+      <Header />
+      <main className="min-h-screen">{children}</main>
+      <Footer />
+    </div>
   );
 }

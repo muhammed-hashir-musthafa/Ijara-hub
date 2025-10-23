@@ -3,6 +3,8 @@
 import React from "react";
 import Link from "next/link";
 import { FormikHelpers } from "formik";
+import toast from "react-hot-toast";
+import { AxiosError } from "axios";
 import {
   Card,
   CardContent,
@@ -14,6 +16,8 @@ import { Shield, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/base/ui/alert";
 import { AdminLoginFormValues } from "@/types/form";
 import AdminLoginForm from "@/components/admin/forms/AdminLoginForm";
+import { adminLogin } from "@/services/authService";
+import { setCookie } from "@/lib/cookies";
 
 
 
@@ -24,11 +28,23 @@ export const AdminLoginPage = () => {
     actions: FormikHelpers<AdminLoginFormValues>
   ) => {
     try {
-      console.log("[Admin Login] Form submitted:", values);
+      const response = await adminLogin(values);
+      toast.success("Admin login successful!");
+      setCookie("token", response?.data?.token || '', 7);
+      if (response?.data?.user?._id) {
+        setCookie("userId", response.data.user._id, 7);
+      }
+      setCookie("userRole", "admin", 7);
       actions.resetForm();
-      // TODO: Implement actual admin login logic
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-    } catch (error) {
+      // Redirect to admin dashboard
+      window.location.href = "/admin";
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        const errorMessage = error.response?.data?.message || "Admin login failed. Please check your credentials.";
+        toast.error(errorMessage);
+      } else {
+        toast.error("Admin login failed. Please check your credentials.");
+      }
       console.error("Login error:", error);
     } finally {
       actions.setSubmitting(false);

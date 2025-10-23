@@ -5,11 +5,12 @@ export interface IUser {
   fname: string;
   lname: string;
   email: string;
-  password: string;
-  gender: "male" | "female" | "other";
+  password?: string; // Optional for Google users
+  googleId?: string; // Google OAuth ID
+  gender?: "male" | "female" | "other"; // Optional for Google users initially
   age: number;
   role: "admin" | "owner" | "renter";
-  phone: string;
+  phone?: string; // Optional for Google users initially
   address?: {
     street?: string;
     city?: string;

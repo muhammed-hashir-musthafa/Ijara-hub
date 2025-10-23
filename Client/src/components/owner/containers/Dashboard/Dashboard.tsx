@@ -4,63 +4,81 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/base/ui/card";
 import {
   Home,
-  Calendar,
+  MessageSquare,
   BarChart3,
   Clock,
   CheckCircle2,
   Sparkles,
+  Calendar,
 } from "lucide-react";
 import Header from "../../ui/header";
+import { getUserById } from "@/services/userService";
+import { getOwnerDashboardStats, DashboardStats } from "@/services/dashboardService";
+import { User } from "@/types/auth";
+import { getCookie } from "@/lib/cookies";
 
-const ownerData = {
-  name: "John Doe",
-  properties: 12,
-  upcomingBookings: 8,
-  rating: 4.9,
-  totalBookings: 156,
-  occupancyRate: 87,
-  responseTime: "< 30 min",
-};
+
 
 export default function OwnerDashboard() {
   const [isVisible, setIsVisible] = useState(false);
   const [activeCard, setActiveCard] = useState<number | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardStats>({
+    totalProperties: 0,
+    totalReviews: 0,
+    averageRating: 0,
+  });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const userId = getCookie('userId');
+        if (!userId) return;
+
+        // Fetch user data and dashboard stats
+        const [userResponse, dashboardStats] = await Promise.all([
+          getUserById(userId),
+          getOwnerDashboardStats(userId)
+        ]);
+        
+        setUser(userResponse?.data?.user);
+        setDashboardData(dashboardStats);
+        console.log(dashboardStats, "dashboard stats");
+      } catch (error) {
+        console.error('Failed to fetch dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
     setIsVisible(true);
   }, []);
 
   const stats = [
     {
       title: "Total Properties",
-      value: ownerData.properties,
+      value: loading ? 0 : dashboardData.totalProperties,
       icon: Home,
       color: "from-amber-500 to-orange-600",
       bgGlow: "bg-amber-500/20",
     },
     {
-      title: "Upcoming Bookings",
-      value: ownerData.upcomingBookings,
-      icon: Calendar,
+      title: "Total Reviews",
+      value: loading ? 0 : dashboardData.totalReviews,
+      icon: MessageSquare,
       color: "from-blue-500 to-cyan-600",
       bgGlow: "bg-blue-500/20",
     },
     {
       title: "Overall Rating",
-      value: ownerData.rating,
+      value: loading ? 0 : dashboardData.averageRating,
       suffix: " / 5",
       icon: BarChart3,
       color: "from-purple-500 to-pink-600",
       bgGlow: "bg-purple-500/20",
     },
-    // {
-    //   title: "Occupancy Rate",
-    //   value: ownerData.occupancyRate,
-    //   suffix: "%",
-    //   icon: TrendingUp,
-    //   color: "from-green-500 to-emerald-600",
-    //   bgGlow: "bg-green-500/20",
-    // },
   ];
 
   const recentActivity = [
@@ -113,7 +131,7 @@ export default function OwnerDashboard() {
           <div className="flex items-center mb-4">
             <Sparkles className="h-6 w-6 text-amber-500 mr-3 animate-pulse" />
             <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent">
-              Welcome back, {ownerData.name.split(" ")[0]}
+              Welcome back, {user?.fname || 'Owner'}
             </h1>
           </div>
           <p className="text-gray-600 text-lg ml-9">
@@ -156,15 +174,21 @@ export default function OwnerDashboard() {
                   {stat.title}
                 </p>
                 <div className="flex items-baseline">
-                  <p
-                    className={`text-3xl font-bold bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`}
-                  >
-                    {stat.value}
-                  </p>
-                  {stat.suffix && (
-                    <span className="text-lg text-gray-500 ml-1">
-                      {stat.suffix}
-                    </span>
+                  {loading ? (
+                    <div className="h-9 bg-gray-200 rounded w-16 animate-pulse"></div>
+                  ) : (
+                    <>
+                      <p
+                        className={`text-3xl font-bold bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`}
+                      >
+                        {stat.value}
+                      </p>
+                      {stat.suffix && (
+                        <span className="text-lg text-gray-500 ml-1">
+                          {stat.suffix}
+                        </span>
+                      )}
+                    </>
                   )}
                 </div>
               </CardContent>
@@ -273,8 +297,8 @@ export default function OwnerDashboard() {
             <CardContent className="p-6">
               <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                 {[
-                  { label: "Total Bookings", value: ownerData.totalBookings },
-                  { label: "Total Properties", value: ownerData.properties },
+                  { label: "Total Reviews", value: loading ? 0 : dashboardData.totalReviews },
+                  { label: "Total Properties", value: loading ? 0 : dashboardData.totalProperties },
                   { label: "Status", value: "Active" },
                 ].map((item, index) => (
                   <div key={index} className="text-center group">

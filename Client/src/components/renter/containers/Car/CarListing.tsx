@@ -1,10 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/base/ui/button";
 import {
-  Navigation,
-  Bluetooth,
   Grid,
   List,
   Shield,
@@ -15,196 +13,60 @@ import {
 } from "lucide-react";
 import CarsFilters from "@/components/base/containers/Car/CarFilter";
 import CarCard from "@/components/base/containers/Car/CarCard";
-import { CarFilters } from "@/types/car";
-
-// Mock data
-const mockCars = [
-  {
-    id: 1,
-    title: "Luxury Sports Car",
-    brand: "Lamborghini",
-    model: "Huracán",
-    year: 2023,
-    location: "Dubai",
-    price: 2500,
-    originalPrice: 3000,
-    rating: 4.9,
-    reviews: 45,
-    image:
-      "https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=800&h=600&fit=crop",
-    images: [
-      "https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=800&h=600&fit=crop",
-    ],
-    features: ["GPS Navigation", "Premium Sound", "Leather Seats"],
-    passengers: 2,
-    category: "Sports",
-    fuelType: "Petrol",
-    transmission: "Automatic",
-    isNew: true,
-    discount: 17,
-    acceleration: "3.2s",
-    power: "630 HP",
-  },
-  {
-    id: 2,
-    title: "Executive Sedan",
-    brand: "Mercedes-Benz",
-    model: "S-Class",
-    year: 2023,
-    location: "Abu Dhabi",
-    price: 800,
-    rating: 4.7,
-    reviews: 78,
-    image:
-      "https://images.unsplash.com/photo-1563720360172-67b8f3dce741?w=800&h=600&fit=crop",
-    images: [
-      "https://images.unsplash.com/photo-1563720360172-67b8f3dce741?w=800&h=600&fit=crop",
-    ],
-    features: ["Chauffeur Available", "WiFi Hotspot", "Massage Seats"],
-    passengers: 4,
-    category: "Luxury",
-    fuelType: "Petrol",
-    transmission: "Automatic",
-    power: "450 HP",
-  },
-  {
-    id: 3,
-    title: "Premium SUV",
-    brand: "BMW",
-    model: "X7",
-    year: 2022,
-    location: "Dubai",
-    price: 650,
-    rating: 4.6,
-    reviews: 92,
-    image:
-      "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&h=600&fit=crop",
-    images: [
-      "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&h=600&fit=crop",
-    ],
-    features: ["7 Seats", "Panoramic Sunroof", "Apple CarPlay"],
-    passengers: 7,
-    category: "SUV",
-    fuelType: "Petrol",
-    transmission: "Automatic",
-    power: "400 HP",
-  },
-  {
-    id: 4,
-    title: "Electric Luxury",
-    brand: "Tesla",
-    model: "Model S",
-    year: 2023,
-    location: "Dubai",
-    price: 900,
-    rating: 4.8,
-    reviews: 34,
-    image:
-      "https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=800&h=600&fit=crop",
-    images: [
-      "https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=800&h=600&fit=crop",
-    ],
-    features: ["Autopilot", "Supercharging", "Premium Interior"],
-    passengers: 5,
-    category: "Luxury",
-    fuelType: "Electric",
-    transmission: "Automatic",
-    isElectric: true,
-    isNew: true,
-    power: "1020 HP",
-  },
-];
-
-// Car Detail Data
-export const carDetailData = {
-  id: 1,
-  title: "Luxury Sports Car",
-  brand: "Lamborghini",
-  model: "Huracán",
-  year: 2023,
-  location: "Dubai",
-  price: 2500,
-  originalPrice: 3000,
-  rating: 4.9,
-  reviews: 45,
-  images: [
-    "https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=800&h=600&fit=crop",
-    "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800&h=600&fit=crop",
-    "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&h=600&fit=crop",
-  ],
-  category: "Sports",
-  passengers: 2,
-  fuelType: "Petrol",
-  transmission: "Automatic",
-  engine: "5.2L V10",
-  power: "630 HP",
-  acceleration: "3.2s (0-100 km/h)",
-  topSpeed: "325 km/h",
-  description:
-    "Experience the thrill of driving one of the world's most iconic supercars. This Lamborghini Huracán delivers breathtaking performance with its naturally aspirated V10 engine, offering an unforgettable driving experience through Dubai's stunning landscapes.",
-  features: [
-    { name: "GPS Navigation", icon: Navigation },
-    { name: "Bluetooth", icon: Bluetooth },
-    { name: "Premium Sound", icon: null },
-    { name: "Leather Seats", icon: null },
-    { name: "Climate Control", icon: null },
-    { name: "Keyless Entry", icon: null },
-  ],
-  highlights: [
-    "Iconic Lamborghini design",
-    "Naturally aspirated V10 engine",
-    "Advanced all-wheel drive system",
-    "Premium interior with Alcantara",
-    "Professional delivery service",
-  ],
-  specifications: {
-    Engine: "5.2L V10",
-    Power: "630 HP",
-    Torque: "600 Nm",
-    Transmission: "7-speed dual-clutch",
-    Drive: "All-wheel drive",
-    "Fuel Tank": "83L",
-    Weight: "1,422 kg",
-    Length: "4,520 mm",
-  },
-  rental: {
-    company: "Dubai Luxury Rentals",
-    rating: 4.8,
-    reviews: 892,
-    verified: true,
-  },
-  userReviews: [
-    {
-      id: 1,
-      user: "Michael R.",
-      rating: 5,
-      date: "1 week ago",
-      comment:
-        "Absolutely incredible experience! The car was in perfect condition and the service was exceptional. Driving through Dubai in this beast was unforgettable.",
-    },
-    {
-      id: 2,
-      user: "James L.",
-      rating: 5,
-      date: "3 weeks ago",
-      comment:
-        "Professional service from start to finish. The Huracán exceeded all expectations. Will definitely rent again!",
-    },
-  ],
-};
+import { CarFilters, Car as CarType, CarQueryParams } from "@/types/car";
+import { getCars } from "@/services/carService";
 
 export const CarsPage = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = useState("recommended");
-  const [cars] = useState(mockCars);
+  const [cars, setCars] = useState<CarType[]>([]);
   const [isVisible, setIsVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [filters, setFilters] = useState<CarQueryParams>({});
+  const [totalCars, setTotalCars] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const fetchCars = useCallback(
+    async (params: CarQueryParams = {}) => {
+      try {
+        setIsLoading(true);
+        const response = await getCars({
+          ...params,
+          page: currentPage,
+          limit: 8,
+        });
+        setCars(response?.data?.cars || []);
+        setTotalCars(response?.data?.pagination?.totalItems || 0);
+      } catch (error: unknown) {
+        console.error("Error fetching cars:", error);
+        setCars([]);
+        setTotalCars(0);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [currentPage]
+  );
 
   useEffect(() => {
     setIsVisible(true);
-  }, []);
+    fetchCars(filters);
+  }, [fetchCars, filters]);
 
-  const handleFiltersChange = (filters: CarFilters) => {
-    console.log("Filters changed:", filters);
+  const handleFiltersChange = (newFilters: CarFilters) => {
+    const queryParams: CarQueryParams = {
+      category: newFilters?.categories?.[0],
+      brand: newFilters?.brands?.[0],
+      fuelType: newFilters?.fuelTypes?.[0],
+      minPrice: newFilters?.priceRange?.[0],
+      maxPrice: newFilters?.priceRange?.[1],
+    };
+    setFilters(queryParams);
+    setCurrentPage(1);
+  };
+
+  const handleLoadMore = () => {
+    setCurrentPage((prev) => prev + 1);
   };
 
   return (
@@ -267,7 +129,9 @@ export const CarsPage = () => {
               <div className="flex items-center gap-6">
                 <div>
                   <h2 className="text-lg font-bold text-gray-900">
-                    {cars.length} Vehicles Available
+                    {isLoading
+                      ? "Loading..."
+                      : `${totalCars} Vehicles Available`}
                   </h2>
                   <p className="text-sm text-gray-600">
                     Find your perfect ride
@@ -316,34 +180,87 @@ export const CarsPage = () => {
             </div>
 
             {/* Results */}
-            <div
-              className={`grid gap-8 ${
-                viewMode === "grid"
-                  ? "grid-cols-1 md:grid-cols-2 xl:grid-cols-2"
-                  : "grid-cols-1"
-              }`}
-            >
-              {cars.map((car, index) => (
-                <CarCard
-                  key={car.id}
-                  car={car}
-                  index={index}
-                  viewMode={viewMode}
-                />
-              ))}
-            </div>
+            {isLoading ? (
+              <div className="grid gap-8 grid-cols-1 md:grid-cols-2 xl:grid-cols-2">
+                {[...Array(4)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="bg-white rounded-2xl p-6 animate-pulse"
+                  >
+                    <div className="h-48 bg-gray-200 rounded-xl mb-4"></div>
+                    <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                  </div>
+                ))}
+              </div>
+            ) : cars?.length === 0 ? (
+              <div className="text-center py-16">
+                <Car className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-600 mb-2">
+                  No cars found
+                </h3>
+                <p className="text-gray-500">
+                  Try adjusting your filters or search criteria
+                </p>
+              </div>
+            ) : (
+              <div
+                className={`grid gap-8 ${
+                  viewMode === "grid"
+                    ? "grid-cols-1 md:grid-cols-2 xl:grid-cols-2"
+                    : "grid-cols-1"
+                }`}
+              >
+                {cars?.map((car, index) => {
+                  const reviews = Array.isArray(car?.reviews) ? car.reviews : [];
+                  const avgRating = reviews.length > 0 
+                    ? reviews.reduce((sum: number, review) => sum + (review?.rating || 0), 0) / reviews.length 
+                    : 0;
+                  
+                  return (
+                    <CarCard
+                      key={car?._id}
+                      car={{
+                        id: car?._id,
+                        brand: car?.brand,
+                        model: car?.model,
+                        title: car?.title,
+                        year: car?.year,
+                        category: car?.category,
+                        image: car?.images?.[0] || "/placeholder-car.jpg",
+                        location: car?.address?.place || 'Dubai',
+                        rating: Math.round(avgRating * 10) / 10,
+                        reviews: reviews.length,
+                        passengers: car?.seatingCapacity,
+                        fuelType: car?.fuelType,
+                        transmission: car?.transmission,
+                        features: car?.amenities,
+                        price: car?.dailyRate,
+                        isElectric: car?.fuelType === "electric",
+                      }}
+                      index={index}
+                      viewMode={viewMode}
+                    />
+                  );
+                })}
+              </div>
+            )}
 
             {/* Load More */}
-            <div className="text-center mt-16">
-              <Button
-                variant="outline"
-                size="lg"
-                className="border-2 border-amber-500 text-amber-600 hover:bg-amber-500 hover:text-white transition-all duration-300 transform hover:scale-105 group px-8 py-4 rounded-xl"
-              >
-                Load More Vehicles
-                <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </div>
+            {cars?.length < totalCars && (
+              <div className="text-center mt-16">
+                <Button
+                  onClick={handleLoadMore}
+                  disabled={isLoading}
+                  variant="outline"
+                  size="lg"
+                  className="border-2 border-amber-500 text-amber-600 hover:bg-amber-500 hover:text-white transition-all duration-300 transform hover:scale-105 group px-8 py-4 rounded-xl"
+                >
+                  {isLoading ? "Loading..." : "Load More Vehicles"}
+                  <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>

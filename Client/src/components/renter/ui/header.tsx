@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/base/ui/button";
 import {
   Car,
@@ -12,13 +13,66 @@ import {
   Info,
   ChevronRight,
   Sparkles,
+  LogOut,
+  MessageSquare,
+  User,
+  ChevronDown,
 } from "lucide-react";
+import toast from "react-hot-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { getProfile } from "@/services/authService";
+import { getConversations } from "@/services/messageService";
+import { User as UserType } from "@/types/auth";
+import { Conversation } from "@/types/message";
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [user, setUser] = useState<UserType | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+  
   const pathname = usePathname();
+  const { isAuthenticated, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    setIsDropdownOpen(false);
+    toast.success('Logged out successfully');
+  };
+
+  const fetchUser = useCallback(async () => {
+    if (isAuthenticated) {
+      try {
+        const [userResponse, conversationsResponse] = await Promise.all([
+          getProfile(),
+          getConversations()
+        ]);
+        
+        setUser(userResponse.data.user);
+        
+        // Calculate unread conversations count
+        const conversations = conversationsResponse?.data?.conversations || [];
+        const userId = userResponse.data.user._id;
+        
+        if (userId) {
+          const unreadConversations = conversations.filter((conv: Conversation) => {
+            const userUnreadCount = conv.unreadCount instanceof Map 
+              ? conv.unreadCount.get(userId) || 0
+              : (conv.unreadCount as Record<string, number>)?.[userId] || 0;
+            return userUnreadCount > 0;
+          });
+          setUnreadCount(unreadConversations.length);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user:', error);
+      }
+    }
+  }, [isAuthenticated]);
+
+  const getInitials = (fname: string, lname: string) => {
+    return `${fname.charAt(0)}${lname.charAt(0)}`.toUpperCase();
+  };
 
   const navigation = [
     { name: "Home", href: "/", icon: Home },
@@ -35,6 +89,21 @@ export function Header() {
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    fetchUser();
+  }, [fetchUser]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.avatar-dropdown')) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   return (
@@ -105,31 +174,93 @@ export function Header() {
 
           {/* Desktop CTA Buttons */}
           <div className="hidden lg:flex items-center space-x-3">
-            <Link href="/login" passHref>
-              <Button
-                variant="outline"
-                className="border-2 border-gray-300 text-gray-700 hover:border-amber-500 hover:text-amber-600 hover:bg-amber-50 transition-all duration-300 rounded-xl px-6 group"
-              >
-                <span>Login</span>
-                <ChevronRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </Link>
+            {isAuthenticated ? (
+              <div className="relative avatar-dropdown">
+                <button
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="flex items-center space-x-2 p-2 rounded-xl hover:bg-amber-50 transition-all duration-300 group"
+                >
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center overflow-hidden border-2 border-white shadow-md">
+                    {user?.profileImage ? (
+                      <Image
+                        src={user.profileImage}
+                        alt={`${user.fname} ${user.lname}`}
+                        width={32}
+                        height={32}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-xs font-bold text-white">
+                        {user ? getInitials(user.fname, user.lname) : 'U'}
+                      </span>
+                    )}
+                  </div>
+                  <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {isDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+                    <Link
+                      href="/profile"
+                      className="flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-amber-50 hover:text-amber-600 transition-colors"
+                      onClick={() => setIsDropdownOpen(false)}
+                    >
+                      <User className="h-4 w-4" />
+                      <span>Profile</span>
+                    </Link>
+                    <Link
+                      href="/messages"
+                      className="flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 hover:bg-amber-50 hover:text-amber-600 transition-colors"
+                      onClick={() => setIsDropdownOpen(false)}
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                      <span>Messages</span>
+                      {unreadCount > 0 && (
+                        <span className="ml-auto bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
+                          {unreadCount > 99 ? '99+' : unreadCount}
+                        </span>
+                      )}
+                    </Link>
+                    <hr className="my-2 border-gray-200" />
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center space-x-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors w-full text-left"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      <span>Logout</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                <Link href="/login" passHref>
+                  <Button
+                    variant="outline"
+                    className="border-2 border-gray-300 text-gray-700 hover:border-amber-500 hover:text-amber-600 hover:bg-amber-50 transition-all duration-300 rounded-xl px-6 group"
+                  >
+                    <span>Login</span>
+                    <ChevronRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </Link>
 
-            <Link href="/renter/signup" passHref>
-              <Button
-                variant="ghost"
-                className="text-gray-700 hover:text-amber-600 hover:bg-amber-50 transition-all duration-300 rounded-xl px-6"
-              >
-                Sign Up
-              </Button>
-            </Link>
+                <Link href="/renter/signup" passHref>
+                  <Button
+                    variant="ghost"
+                    className="text-gray-700 hover:text-amber-600 hover:bg-amber-50 transition-all duration-300 rounded-xl px-6"
+                  >
+                    Sign Up
+                  </Button>
+                </Link>
 
-            <Link href="/owner/signup" passHref>
-              <Button className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 rounded-xl px-6 group">
-                <Sparkles className="h-4 w-4 mr-2 group-hover:rotate-12 transition-transform" />
-                List Property
-              </Button>
-            </Link>
+                <Link href="/owner/signup" passHref>
+                  <Button className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 rounded-xl px-6 group">
+                    <Sparkles className="h-4 w-4 mr-2 group-hover:rotate-12 transition-transform" />
+                    List Property
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -203,25 +334,76 @@ export function Header() {
 
             {/* Mobile CTA */}
             <div className="flex flex-col space-y-3 px-4 pt-4 border-t border-gray-200">
-              <Button
-                variant="outline"
-                className="border-2 border-gray-300 text-gray-700 hover:border-amber-500 hover:text-amber-600 hover:bg-amber-50 transition-all duration-300 rounded-xl justify-center group"
-              >
-                Login
-                <ChevronRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
-              </Button>
-
-              <Button
-                variant="ghost"
-                className="text-gray-700 hover:text-amber-600 hover:bg-amber-50 transition-all duration-300 rounded-xl justify-center"
-              >
-                Sign Up
-              </Button>
-
-              <Button className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 rounded-xl justify-center group">
-                <Sparkles className="h-4 w-4 mr-2 group-hover:rotate-12 transition-transform" />
-                List Property
-              </Button>
+              {isAuthenticated ? (
+                <>
+                  <Link href="/profile">
+                    <Button
+                      variant="outline"
+                      className="w-full border-2 border-gray-300 text-gray-700 hover:border-amber-500 hover:text-amber-600 hover:bg-amber-50 transition-all duration-300 rounded-xl justify-center group"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <User className="h-4 w-4 mr-2" />
+                      Profile
+                    </Button>
+                  </Link>
+                  <Link href="/messages">
+                    <Button
+                      variant="outline"
+                      className="w-full border-2 border-gray-300 text-gray-700 hover:border-amber-500 hover:text-amber-600 hover:bg-amber-50 transition-all duration-300 rounded-xl justify-center group relative"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Messages
+                      {unreadCount > 0 && (
+                        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
+                          {unreadCount > 99 ? '99+' : unreadCount}
+                        </span>
+                      )}
+                    </Button>
+                  </Link>
+                  <Button
+                    onClick={handleLogout}
+                    variant="outline"
+                    className="border-2 border-red-300 text-red-700 hover:border-red-500 hover:text-red-600 hover:bg-red-50 transition-all duration-300 rounded-xl justify-center group"
+                  >
+                    <LogOut className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Link href="/login">
+                    <Button
+                      variant="outline"
+                      className="w-full border-2 border-gray-300 text-gray-700 hover:border-amber-500 hover:text-amber-600 hover:bg-amber-50 transition-all duration-300 rounded-xl justify-center group"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Login
+                      <ChevronRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </Link>
+                  
+                  <Link href="/renter/signup">
+                    <Button
+                      variant="ghost"
+                      className="w-full text-gray-700 hover:text-amber-600 hover:bg-amber-50 transition-all duration-300 rounded-xl justify-center"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Sign Up
+                    </Button>
+                  </Link>
+                  
+                  <Link href="/owner/signup">
+                    <Button 
+                      className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl justify-center group"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Sparkles className="h-4 w-4 mr-2 group-hover:rotate-12 transition-transform" />
+                      List Property
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

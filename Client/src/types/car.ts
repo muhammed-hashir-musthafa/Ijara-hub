@@ -1,3 +1,5 @@
+import { Review } from './review';
+
 export interface CarFilters {
   priceRange?: [number, number];
   categories?: string[];
@@ -6,6 +8,79 @@ export interface CarFilters {
   search?: string;
 }
 
+export interface Car {
+  _id: string
+  title: string
+  description?: string
+  brand: string
+  model: string
+  year: number
+  licensePlate: string
+  dailyRate: number
+  category: 'economy' | 'compact' | 'midsize' | 'luxury' | 'suv' | 'sports' | 'convertible'
+  transmission: 'manual' | 'automatic' | 'cvt'
+  fuelType: 'petrol' | 'diesel' | 'hybrid' | 'electric'
+  seatingCapacity: number
+  color: string
+  address: {
+    place?: string
+    pincode?: number
+  }
+  amenities: string[]
+  images: string[]
+  status: 'active' | 'inactive' | 'pending'
+  owner: {
+    _id: string
+    fname: string
+    lname: string
+    email: string
+    phone: string
+    role: string
+  }
+  reviews?: Review[]
+  averageRating?: number
+  reviewCount?: number
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface CreateCarPayload {
+  title: string
+  description?: string
+  brand: string
+  model: string
+  year: number
+  licensePlate: string
+  dailyRate: number
+  category: 'economy' | 'compact' | 'midsize' | 'luxury' | 'suv' | 'sports' | 'convertible'
+  transmission: 'manual' | 'automatic' | 'cvt'
+  fuelType: 'petrol' | 'diesel' | 'hybrid' | 'electric'
+  seatingCapacity: number
+  color: string
+  address: {
+    place?: string
+    pincode?: number
+  }
+  amenities: string[]
+  images: string[]
+}
+
+export type UpdateCarPayload = Partial<CreateCarPayload>
+
+export interface CarQueryParams {
+  page?: number
+  limit?: number
+  category?: string
+  brand?: string
+  location?: string
+  minPrice?: number
+  maxPrice?: number
+  fuelType?: string
+  transmission?: string
+  status?: string
+}
+
+// Legacy interface for existing components
 export interface CarType {
   id: number  | string;
   brand: string;

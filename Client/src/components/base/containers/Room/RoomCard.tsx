@@ -7,9 +7,7 @@ import { Button } from "@/components/base/ui/button";
 import {
   Star,
   MapPin,
-  Users,
-  Heart,
-  Share2,
+  Users, 
   ChevronRight,
   Sparkles,
   Home,
@@ -27,8 +25,7 @@ const RoomCard: React.FC<RoomCardProps> = ({
   index,
   viewMode = "grid",
 }) => {
-  const [isLiked, setIsLiked] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
+   const [imageLoaded, setImageLoaded] = useState(false);
 
   return (
     <Link href={`/rooms/${room.id}`} passHref className="w-full">
@@ -47,8 +44,8 @@ const RoomCard: React.FC<RoomCardProps> = ({
             <Image
               width={400}
               height={300}
-              src={room.image}
-              alt={room.title}
+              src={room?.image}
+              alt={room?.title}
               className={`w-full object-cover group-hover:scale-110 transition-all duration-700 ${
                 viewMode === "list" ? "h-48" : "h-56"
               }`}
@@ -65,45 +62,21 @@ const RoomCard: React.FC<RoomCardProps> = ({
 
           {/* Badges */}
           <div className="absolute top-4 left-4 flex flex-col space-y-2">
-            {room.isNew && (
+            {room?.isNew && (
               <Badge className="bg-gradient-to-r from-green-500 to-emerald-600 text-white border-0 shadow-lg animate-pulse">
                 <Sparkles className="h-3 w-3 mr-1" />
                 New
               </Badge>
             )}
-            {room.discount && (
+            {room?.discount && (
               <Badge className="bg-gradient-to-r from-red-500 to-pink-600 text-white border-0 shadow-lg">
-                {room.discount}% Off
+                {room?.discount}% Off
               </Badge>
             )}
             <Badge className="bg-gradient-to-r from-blue-500 to-cyan-600 text-white border-0 shadow-lg">
               <Building className="h-3 w-3 mr-1" />
-              {room.category}
+              {room?.category}
             </Badge>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="absolute top-4 right-4 flex flex-col space-y-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0">
-            <Button
-              size="sm"
-              variant="ghost"
-              className={`bg-white/20 backdrop-blur-sm rounded-full p-2 hover:bg-white/30 transition-all duration-300 ${
-                isLiked ? "text-red-500" : "text-white"
-              }`}
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsLiked(!isLiked);
-              }}
-            >
-              <Heart className={`h-4 w-4 ${isLiked ? "fill-current" : ""}`} />
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="bg-white/20 backdrop-blur-sm rounded-full p-2 hover:bg-white/30 text-white transition-all duration-300"
-            >
-              <Share2 className="h-4 w-4" />
-            </Button>
           </div>
         </div>
 
@@ -116,20 +89,20 @@ const RoomCard: React.FC<RoomCardProps> = ({
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
                 <h3 className="font-bold text-xl text-gray-900 group-hover:text-amber-600 transition-colors mb-2">
-                  {room.title}
+                  {room?.title}
                 </h3>
                 <div className="flex items-center text-sm text-gray-600 mb-3">
                   <MapPin className="h-4 w-4 mr-1 text-amber-500" />
-                  <span className="font-medium">{room.location}</span>
+                  <span className="font-medium">{room?.location}</span>
                 </div>
               </div>
               <div className="text-right">
                 <div className="flex items-center space-x-1 text-sm bg-amber-50 px-3 py-1 rounded-full mb-2">
                   <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
                   <span className="font-bold text-amber-700">
-                    {room.rating}
+                    {room?.rating}
                   </span>
-                  <span className="text-amber-600">({room.reviews})</span>
+                  <span className="text-amber-600">({room?.reviews})</span>
                 </div>
               </div>
             </div>
@@ -138,25 +111,25 @@ const RoomCard: React.FC<RoomCardProps> = ({
             <div className="grid grid-cols-4 gap-3 mb-4">
               <div className="text-center bg-gray-100 rounded-lg p-2">
                 <Users className="h-4 w-4 mx-auto mb-1 text-gray-600" />
-                <span className="text-xs text-gray-600">{room.guests}</span>
+                <span className="text-xs text-gray-600">{room?.guests}</span>
               </div>
               <div className="text-center bg-gray-100 rounded-lg p-2">
                 <Bed className="h-4 w-4 mx-auto mb-1 text-gray-600" />
-                <span className="text-xs text-gray-600">{room.bedrooms}</span>
+                <span className="text-xs text-gray-600">{room?.bedrooms}</span>
               </div>
               <div className="text-center bg-gray-100 rounded-lg p-2">
                 <Bath className="h-4 w-4 mx-auto mb-1 text-gray-600" />
-                <span className="text-xs text-gray-600">{room.bathrooms}</span>
+                <span className="text-xs text-gray-600">{room?.bathrooms}</span>
               </div>
               <div className="text-center bg-gray-100 rounded-lg p-2">
                 <Maximize className="h-4 w-4 mx-auto mb-1 text-gray-600" />
-                <span className="text-xs text-gray-600">{room.size}m²</span>
+                <span className="text-xs text-gray-600">{room?.size}m²</span>
               </div>
             </div>
 
             {/* Amenities */}
             <div className="flex flex-wrap gap-2 mb-6">
-              {room.amenities.slice(0, 3).map((amenity, idx) => (
+              {room?.amenities?.slice(0, 3)?.map((amenity, idx) => (
                 <span
                   key={idx}
                   className="text-xs bg-white border border-gray-200 px-2 py-1 rounded-lg text-gray-600"
@@ -164,9 +137,9 @@ const RoomCard: React.FC<RoomCardProps> = ({
                   {amenity}
                 </span>
               ))}
-              {room.amenities.length > 3 && (
+              {room?.amenities?.length > 3 && (
                 <span className="text-xs text-gray-500">
-                  +{room.amenities.length - 3} more
+                  +{room?.amenities?.length - 3} more
                 </span>
               )}
             </div>
@@ -175,14 +148,14 @@ const RoomCard: React.FC<RoomCardProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex flex-col">
               <div className="flex items-center space-x-2">
-                {room.originalPrice && (
+                {room?.originalPrice && (
                   <span className="text-sm text-gray-500 line-through">
-                    AED {room.originalPrice}
+                    AED {room?.originalPrice}
                   </span>
                 )}
               </div>
               <div className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
-                AED {room.price}
+                AED {room?.price}
               </div>
               <div className="text-xs text-gray-500 font-medium">per night</div>
             </div>

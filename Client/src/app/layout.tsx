@@ -1,6 +1,9 @@
 import type React from "react";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { Toaster } from "react-hot-toast";
+import { SessionProvider } from "next-auth/react";
+import { GoogleSignInHandler } from "@/components/auth/google-signin";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -36,7 +39,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`font-sans ${inter.variable} antialiased`}>
-        <main className="min-h-screen">{children}</main>
+        <SessionProvider>
+          <GoogleSignInHandler />
+          <main className="min-h-screen">{children}</main>
+          <Toaster position="top-right" />
+        </SessionProvider>
       </body>
     </html>
   );

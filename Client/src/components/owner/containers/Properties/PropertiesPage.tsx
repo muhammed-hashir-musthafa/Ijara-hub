@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import toast from "react-hot-toast";
+import { AxiosError } from "axios";
 import { Button } from "@/components/base/ui/button";
 import { Input } from "@/components/base/ui/input";
 import { Card, CardContent } from "@/components/base/ui/card";
@@ -33,112 +35,11 @@ import {
   ChevronRight,
   Clock,
   Globe,
+  Trash2,
 } from "lucide-react";
 import { Filters, Property, PropertyStatus } from "@/types/owner";
-
-// Mock data
-const mockProperties: Property[] = [
-  {
-    id: "1",
-    title: "Luxury Suite - Dubai Marina",
-    type: "room",
-    category: "luxury",
-    location: "Dubai Marina",
-    price: 850,
-    currency: "AED",
-    status: "active",
-    images: [
-      "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&h=600&fit=crop",
-    ],
-    rating: 4.9,
-    reviewCount: 127,
-    bookings: 24,
-    revenue: 18500,
-    createdAt: "2024-01-15",
-    amenities: ["Wifi", "Coffee", "TV", "AC"],
-    guests: 2,
-  },
-  {
-    id: "2",
-    title: "BMW X5 - Premium SUV",
-    type: "car",
-    category: "luxury",
-    location: "Downtown Dubai",
-    price: 450,
-    currency: "AED",
-    status: "active",
-    images: [
-      "https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=800&h=600&fit=crop",
-    ],
-    rating: 4.8,
-    reviewCount: 89,
-    bookings: 18,
-    revenue: 12300,
-    createdAt: "2024-02-01",
-    amenities: ["GPS", "Insurance", "24/7 Support"],
-    passengers: 4,
-  },
-  {
-    id: "3",
-    title: "Penthouse - Business Bay",
-    type: "room",
-    category: "luxury",
-    location: "Business Bay",
-    price: 1200,
-    currency: "AED",
-    status: "pending",
-    images: [
-      "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop",
-    ],
-    rating: 5.0,
-    reviewCount: 45,
-    bookings: 15,
-    revenue: 22100,
-    createdAt: "2024-02-10",
-    amenities: ["Wifi", "Coffee", "TV", "AC"],
-    guests: 4,
-  },
-  {
-    id: "4",
-    title: "Mercedes S-Class - Executive",
-    type: "car",
-    category: "premium",
-    location: "Jumeirah",
-    price: 320,
-    currency: "AED",
-    status: "inactive",
-    images: [
-      "https://images.unsplash.com/photo-1563720360172-67b8f3dce741?w=800&h=600&fit=crop",
-    ],
-    rating: 4.7,
-    reviewCount: 62,
-    bookings: 12,
-    revenue: 8900,
-    createdAt: "2024-01-20",
-    amenities: ["GPS", "Insurance", "Chauffeur"],
-    passengers: 4,
-  },
-  {
-    id: "5",
-    title: "Studio Apartment - Deira",
-    type: "room",
-    category: "standard",
-    location: "Deira",
-    price: 280,
-    currency: "AED",
-    status: "active",
-    images: [
-      "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&h=600&fit=crop",
-    ],
-    rating: 4.3,
-    reviewCount: 38,
-    bookings: 8,
-    revenue: 5600,
-    createdAt: "2024-02-05",
-    amenities: ["Wifi", "Coffee", "TV", "AC"],
-    guests: 2,
-  },
-];
+import { getRooms, deleteRoom } from "@/services/roomService";
+import { getCars, deleteCar } from "@/services/carService";
 
 export default function PropertiesPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -149,17 +50,175 @@ export default function PropertiesPage() {
     location: "",
     category: "",
   });
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [availableLocations, setAvailableLocations] = useState<string[]>([]);
+
+  const fetchProperties = async () => {
+    try {
+      setIsLoading(true);
+      const [roomsResponse, carsResponse] = await Promise.all([
+        getRooms({ status: "active" }),
+        getCars({ status: "active" }),
+      ]);
+
+      // Dynamic category mapping based on model enums
+      const ROOM_CATEGORIES = ["hotel", "apartment", "villa", "studio", "penthouse"];
+      const CAR_CATEGORIES = ["economy", "compact", "midsize", "luxury", "suv", "sports"];
+      
+      const mapRoomCategory = (
+        category: string
+      ): "luxury" | "premium" | "standard" | "economy" => {
+        const categoryMap: Record<
+          string,
+          "luxury" | "premium" | "standard" | "economy"
+        > = {
+          hotel: "luxury",
+          apartment: "premium",
+          villa: "luxury",
+          studio: "standard",
+          penthouse: "luxury",
+        };
+        return ROOM_CATEGORIES.includes(category) ? categoryMap[category] || "standard" : "standard";
+      };
+
+      const mapCarCategory = (
+        category: string
+      ): "luxury" | "premium" | "standard" | "economy" => {
+        const categoryMap: Record<
+          string,
+          "luxury" | "premium" | "standard" | "economy"
+        > = {
+          economy: "economy",
+          compact: "standard",
+          midsize: "standard",
+          luxury: "luxury",
+          suv: "premium",
+          sports: "luxury",
+        };
+        return CAR_CATEGORIES.includes(category) ? categoryMap[category] || "standard" : "standard";
+      };
+
+      const roomProperties: Property[] = roomsResponse?.data?.rooms?.map(
+        (room) => {
+          const reviews = room.reviews || [];
+          const reviewCount = reviews.length;
+          const rating = reviewCount > 0 
+            ? reviews.reduce((sum: number, review: { rating?: number }) => sum + (review.rating || 0), 0) / reviewCount
+            : 0;
+          
+          return {
+            id: room._id,
+            title: room.title,
+            type: "room",
+            category: mapRoomCategory(room.category),
+            address: {
+              place: room.address?.place,
+              pincode: room.address?.pincode,
+            },
+            price: room.pricePerNight,
+            currency: "AED",
+            status: room.status as PropertyStatus,
+            images:
+              room.images.length > 0 ? room.images : ["/placeholder-room.jpg"],
+            rating: Math.round(rating * 10) / 10,
+            reviewCount,
+            createdAt: new Date(room.createdAt).toISOString().split("T")[0],
+            amenities: room.amenities,
+            guests: room.capacity,
+          };
+        }
+      );
+
+      const carProperties: Property[] = carsResponse?.data?.cars?.map(
+        (car) => {
+          const reviews = car.reviews || [];
+          const reviewCount = reviews.length;
+          const rating = reviewCount > 0 
+            ? reviews.reduce((sum: number, review: { rating?: number }) => sum + (review.rating || 0), 0) / reviewCount
+            : 0;
+          
+          return {
+            id: car._id,
+            title: car.title,
+            type: "car",
+            category: mapCarCategory(car.category),
+            address: {
+              place: car.address?.place,
+              pincode: car.address?.pincode,
+            },
+            price: car.dailyRate,
+            currency: "AED",
+            status: car.status as PropertyStatus,
+            images: car.images.length > 0 ? car.images : ["/placeholder-car.jpg"],
+            rating: Math.round(rating * 10) / 10,
+            reviewCount,
+            createdAt: new Date(car.createdAt).toISOString().split("T")[0],
+            amenities: car.amenities,
+            passengers: car.seatingCapacity,
+          };
+        }
+      );
+
+      const allProperties = [...roomProperties, ...carProperties];
+      setProperties(allProperties);
+      
+      // Extract unique locations dynamically
+      const locations = Array.from(
+        new Set(
+          allProperties
+            .map(p => p.address?.place)
+            .filter(Boolean)
+            .map(place => place!.toLowerCase().replace(/\s+/g, "-"))
+        )
+      );
+      setAvailableLocations(locations);
+    } catch (error: unknown) {
+      console.error("Failed to load properties. Please try again.");
+      console.error("Error fetching properties:", error);
+      setProperties([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteProperty = async (property: Property) => {
+    try {
+      if (property.type === "room") {
+        await deleteRoom(property.id);
+      } else {
+        await deleteCar(property.id);
+      }
+      toast.success("Property deleted successfully");
+      fetchProperties();
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        toast.error(
+          error.response?.data?.message || "Failed to delete property"
+        );
+      } else {
+        toast.error("Failed to delete property");
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchProperties();
+  }, []);
 
   const filteredProperties = useMemo(() => {
-    return mockProperties.filter((p) => {
+    return properties.filter((p) => {
       const matchesSearch =
         p.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-        p.location.toLowerCase().includes(filters.search.toLowerCase());
+        (p.address?.place || "")
+          .toLowerCase()
+          .includes(filters.search.toLowerCase());
       const matchesType = !filters.type || p.type === filters.type;
       const matchesStatus = !filters.status || p.status === filters.status;
       const matchesLocation =
         !filters.location ||
-        p.location.toLowerCase().replace(/\s+/g, "-") === filters.location;
+        (p.address?.place || "").toLowerCase().replace(/\s+/g, "-") ===
+          filters.location;
       const matchesCategory =
         !filters.category || p.category === filters.category;
 
@@ -171,7 +230,7 @@ export default function PropertiesPage() {
         matchesCategory
       );
     });
-  }, [filters]);
+  }, [filters, properties]);
 
   const getStatusColor = (status: PropertyStatus) => {
     switch (status) {
@@ -188,16 +247,37 @@ export default function PropertiesPage() {
 
   const getAmenityIcon = (amenity: string) => {
     const icons: Record<string, React.ElementType> = {
+      // Room amenities
       wifi: Wifi,
-      coffee: Coffee,
       tv: Tv,
       ac: AirVent,
+      minibar: Coffee,
+      balcony: Home,
+      sea_view: Globe,
+      city_view: Globe,
+      jacuzzi: AirVent,
+      kitchen: Coffee,
+      parking: Car,
+      gym_access: Users,
+      pool_access: Users,
+      room_service: Clock,
+      laundry: Clock,
+      safe: Clock,
+      // Car amenities
       gps: Globe,
-      insurance: Clock,
-      "24/7 support": Clock,
-      chauffeur: Users,
+      bluetooth: Wifi,
+      backup_camera: Tv,
+      sunroof: Home,
+      leather_seats: Users,
+      heated_seats: AirVent,
+      cruise_control: Car,
+      keyless_entry: Clock,
+      usb_charging: Wifi,
+      wifi_hotspot: Wifi,
+      premium_audio: Tv,
+      parking_sensors: Car,
     };
-    const Icon = icons[amenity.toLowerCase()] || Globe;
+    const Icon = icons[amenity.toLowerCase().replace(/\s+/g, "_")] || Globe;
     return <Icon className="h-3 w-3" />;
   };
 
@@ -208,9 +288,8 @@ export default function PropertiesPage() {
     property: Property;
     index: number;
   }) => (
-    <Link
-      href={`/owner/properties/${property.id}`}
-      className="block group overflow-hidden hover:shadow-2xl transition-all duration-700 transform hover:-translate-y-3 bg-gradient-to-br from-white to-gray-50/50 border-0 shadow-lg animate-fade-in-up backdrop-blur-sm rounded-2xl focus:outline-none focus:ring-2 focus:ring-amber-500"
+    <div
+      className="group overflow-hidden hover:shadow-2xl transition-all duration-700 transform hover:-translate-y-3 bg-gradient-to-br from-white to-gray-50/50 border-0 shadow-lg animate-fade-in-up backdrop-blur-sm rounded-2xl"
       style={{ animationDelay: `${index * 0.1}s` }}
     >
       <div className="relative overflow-hidden rounded-t-2xl">
@@ -248,27 +327,30 @@ export default function PropertiesPage() {
           <h3 className="font-bold text-lg text-gray-900 line-clamp-1 group-hover:text-amber-600 transition-colors duration-300">
             {property.title}
           </h3>
-          <div className="flex items-center space-x-1 text-sm bg-amber-50 px-3 py-1 rounded-full border border-amber-100">
-            <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-            <span className="font-bold text-amber-700">{property.rating}</span>
-          </div>
+          {property.rating > 0 ? (
+            <div className="flex items-center space-x-1 text-sm bg-amber-50 px-3 py-1 rounded-full border border-amber-100">
+              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+              <span className="font-bold text-amber-700">{property.rating}</span>
+            </div>
+          ) : (
+            <div className="flex items-center space-x-1 text-sm bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
+              <Star className="h-3 w-3 text-gray-400" />
+              <span className="font-bold text-gray-500">New</span>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center text-sm text-gray-600 mb-4">
           <MapPin className="h-4 w-4 mr-2 text-amber-500" />
-          <span className="font-medium">{property.location}</span>
+          <span className="font-medium">
+            {property.address?.place || "Location not specified"}
+          </span>
           <span className="mx-2 text-gray-400">•</span>
           <span className="capitalize text-gray-500">{property.category}</span>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 mb-4 p-3 bg-gray-50/50 rounded-xl border border-gray-100">
-          <div className="text-center">
-            <div className="text-lg font-bold text-gray-900">
-              {property.bookings}
-            </div>
-            <div className="text-xs text-gray-500 font-medium">Bookings</div>
-          </div>
-          <div className="text-center border-l border-r border-gray-200">
+        <div className="grid grid-cols-2 gap-4 mb-4 p-3 bg-gray-50/50 rounded-xl border border-gray-100">
+          <div className="text-center  border-r border-gray-200">
             <div className="text-lg font-bold text-gray-900">
               {property.reviewCount}
             </div>
@@ -306,13 +388,26 @@ export default function PropertiesPage() {
               per {property.type === "room" ? "night" : "day"}
             </div>
           </div>
-          <div className="text-amber-600 flex items-center text-sm font-semibold">
-            View Details
-            <ChevronRight className="h-4 w-4 ml-1" />
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleDeleteProperty(property)}
+              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+            <Link
+              href={`/owner/properties/${property.id}`}
+              className="text-amber-600 flex items-center text-sm font-semibold hover:text-amber-700"
+            >
+              View Details
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Link>
           </div>
         </div>
       </CardContent>
-    </Link>
+    </div>
   );
 
   return (
@@ -449,11 +544,13 @@ export default function PropertiesPage() {
                   <SelectValue placeholder="All Locations" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="dubai-marina">Dubai Marina</SelectItem>
-                  <SelectItem value="downtown-dubai">Downtown Dubai</SelectItem>
-                  <SelectItem value="business-bay">Business Bay</SelectItem>
-                  <SelectItem value="jumeirah">Jumeirah</SelectItem>
-                  <SelectItem value="deira">Deira</SelectItem>
+                  {availableLocations.map((location) => (
+                    <SelectItem key={location} value={location}>
+                      {location.split("-").map(word => 
+                        word.charAt(0).toUpperCase() + word.slice(1)
+                      ).join(" ")}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
 
@@ -475,7 +572,18 @@ export default function PropertiesPage() {
           </CardContent>
         </Card>
 
-        {filteredProperties.length === 0 ? (
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl p-6 animate-pulse">
+                <div className="h-56 bg-gray-200 rounded-xl mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-2/3 mb-4"></div>
+                <div className="h-8 bg-gray-200 rounded"></div>
+              </div>
+            ))}
+          </div>
+        ) : filteredProperties.length === 0 ? (
           <div className="text-center py-20">
             <div className="w-20 h-20 bg-gradient-to-br from-amber-100 to-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
               <Sparkles className="h-10 w-10 text-amber-600 animate-pulse" />
