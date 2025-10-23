@@ -25,7 +25,7 @@ const server = http.createServer(app);
 const io = new SocketIOServer(server, {
   cors: {
     origin: process.env.NODE_ENV === "production" 
-      ? ["https://yourdomain.com"] 
+      ? ["http://ijarahub.ddns.net", "http://ec2-34-194-4-168.compute-1.amazonaws.com"] 
       : ["http://localhost:3000"],
     methods: ["GET", "POST", "PATCH"],
     credentials: true
@@ -42,7 +42,7 @@ connectDB();
 // Middleware
 app.use(cors({
   origin: process.env.NODE_ENV === "production" 
-    ? ["https://yourdomain.com"] 
+    ? ["http://ijarahub.ddns.net", "http://ec2-34-194-4-168.compute-1.amazonaws.com"] 
     : ["http://localhost:3000"],
   credentials: true
 }));
