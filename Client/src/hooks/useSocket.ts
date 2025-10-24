@@ -14,8 +14,13 @@ export const useSocket = () => {
 
     if (!globalSocket) {
       console.log('Connecting to socket server...');
-      
-      globalSocket = io('http://localhost:5000', {
+      // Use environment variables in production. If NEXT_PUBLIC_SOCKET_URL
+      // is not set, derive socket URL from NEXT_PUBLIC_API_URL by removing
+      // a trailing '/api'. Fallback to localhost for development.
+      const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL
+        || (process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL.replace(/\/api\/?$/, '') : 'http://localhost:5000');
+
+      globalSocket = io(socketUrl, {
         auth: { token },
         autoConnect: true,
         reconnection: true,

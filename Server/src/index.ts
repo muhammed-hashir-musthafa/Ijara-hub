@@ -16,8 +16,6 @@ import chatRoutes from "./routes/chat";
 import { setupMessageSocket } from "./controllers/messageSocket";
 import { apiLimiter } from "./middleware/rateLimiter";
 
-
-
 // Initialize Express app
 const app = express();
 const server = http.createServer(app);
@@ -25,31 +23,47 @@ const server = http.createServer(app);
 // Set up Socket.IO with CORS
 const io = new SocketIOServer(server, {
   cors: {
-    origin: process.env.NODE_ENV === "production" 
-      ? ["http://ijarahub.ddns.net", "http://ec2-34-194-4-168.compute-1.amazonaws.com"] 
-      : ["http://localhost:3000"],
+    origin:
+      process.env.NODE_ENV === "production"
+        ? [
+            "http://ijarahub.ddns.net",
+            "http://ec2-34-194-4-168.compute-1.amazonaws.com",
+            "http://34.194.4.168",
+            "https://ijarahub.ddns.net",
+            "https://ec2-34-194-4-168.compute-1.amazonaws.com",
+          ]
+        : ["http://localhost:3000"],
     methods: ["GET", "POST", "PATCH"],
-    credentials: true
+    credentials: true,
   },
-  transports: ['polling', 'websocket'],
+  transports: ["polling", "websocket"],
   allowEIO3: true,
   pingTimeout: 60000,
-  pingInterval: 25000
+  pingInterval: 25000,
 });
 
 // Connect to MongoDB
 connectDB();
 
 // Middleware
-app.use(cors({
-  origin: process.env.NODE_ENV === "production" 
-    ? ["http://ijarahub.ddns.net", "http://ec2-34-194-4-168.compute-1.amazonaws.com", "http://34.194.4.168", "https://ijarahub.ddns.net", "https://ec2-34-194-4-168.compute-1.amazonaws.com"]
-    : ["http://localhost:3000"],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token'],
-  exposedHeaders: ['*', 'Authorization']
-}));
+app.use(
+  cors({
+    origin:
+      process.env.NODE_ENV === "production"
+        ? [
+            "http://ijarahub.ddns.net",
+            "http://ec2-34-194-4-168.compute-1.amazonaws.com",
+            "http://34.194.4.168",
+            "https://ijarahub.ddns.net",
+            "https://ec2-34-194-4-168.compute-1.amazonaws.com",
+          ]
+        : ["http://localhost:3000"],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-csrf-token"],
+    exposedHeaders: ["*", "Authorization"],
+  })
+);
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -76,5 +90,7 @@ setupMessageSocket(io);
 
 // Start the server
 server.listen(config.port, () => {
-  console.log(`Server running on port ${config.port} in ${config.environment} mode`);
+  console.log(
+    `Server running on port ${config.port} in ${config.environment} mode`
+  );
 });
