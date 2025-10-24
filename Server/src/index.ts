@@ -43,9 +43,12 @@ connectDB();
 // Middleware
 app.use(cors({
   origin: process.env.NODE_ENV === "production" 
-    ? ["http://ijarahub.ddns.net", "http://ec2-34-194-4-168.compute-1.amazonaws.com", "http://34.194.4.168"]
+    ? ["http://ijarahub.ddns.net", "http://ec2-34-194-4-168.compute-1.amazonaws.com", "http://34.194.4.168", "https://ijarahub.ddns.net", "https://ec2-34-194-4-168.compute-1.amazonaws.com"]
     : ["http://localhost:3000"],
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token'],
+  exposedHeaders: ['*', 'Authorization']
 }));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
