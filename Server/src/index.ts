@@ -12,6 +12,7 @@ import carRoutes from "./routes/car";
 import messageRoutes from "./routes/message";
 import reviewRoutes from "./routes/review";
 import uploadRoutes from "./routes/upload";
+import chatRoutes from "./routes/chat";
 import { setupMessageSocket } from "./controllers/messageSocket";
 import { apiLimiter } from "./middleware/rateLimiter";
 
@@ -25,7 +26,7 @@ const server = http.createServer(app);
 const io = new SocketIOServer(server, {
   cors: {
     origin: process.env.NODE_ENV === "production" 
-      ? ["https://yourdomain.com"] 
+      ? ["http://ijarahub.ddns.net", "http://ec2-34-194-4-168.compute-1.amazonaws.com"] 
       : ["http://localhost:3000"],
     methods: ["GET", "POST", "PATCH"],
     credentials: true
@@ -42,7 +43,7 @@ connectDB();
 // Middleware
 app.use(cors({
   origin: process.env.NODE_ENV === "production" 
-    ? ["https://yourdomain.com"] 
+    ? ["http://ijarahub.ddns.net", "http://ec2-34-194-4-168.compute-1.amazonaws.com"] 
     : ["http://localhost:3000"],
   credentials: true
 }));
@@ -65,6 +66,7 @@ app.use("/api/cars", carRoutes);
 app.use("/api/messages", authenticateToken, messageRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/chat", chatRoutes);
 
 // Socket.IO setup
 setupMessageSocket(io);
