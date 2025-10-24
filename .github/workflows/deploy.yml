@@ -48,11 +48,11 @@ jobs:
 
       - name: Create Client .env file
         run: |
-          echo "NEXT_PUBLIC_API_URL=${{ secrets.CLIENT_API_URL }}" > Client/.env
-          echo "NEXT_PUBLIC_APP_NAME=${{ secrets.CLIENT_APP_NAME }}" >> Client/.env
-          echo "NEXT_PUBLIC_ENV=${{ secrets.CLIENT_ENV }}" >> Client/.env
-          echo "NEXT_PUBLIC_S3_BUCKET=${{ secrets.CLIENT_S3_BUCKET }}" >> Client/.env
-          echo "NEXT_PUBLIC_AWS_REGION=${{ secrets.CLIENT_AWS_REGION }}" >> Client/.env
+          echo "NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}" > Client/.env
+          echo "NEXT_PUBLIC_APP_NAME=${{ secrets.NEXT_PUBLIC_APP_NAME }}" >> Client/.env
+          echo "NEXT_PUBLIC_ENV=${{ secrets.NEXT_PUBLIC_ENV }}" >> Client/.env
+          echo "NEXT_PUBLIC_S3_BUCKET=${{ secrets.NEXT_PUBLIC_S3_BUCKET }}" >> Client/.env
+          echo "NEXT_PUBLIC_AWS_REGION=${{ secrets.NEXT_PUBLIC_AWS_REGION }}" >> Client/.env
           echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> Client/.env
           echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> Client/.env
           echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> Client/.env
