@@ -43,7 +43,7 @@ connectDB();
 // Middleware
 app.use(cors({
   origin: process.env.NODE_ENV === "production" 
-    ? ["http://ijarahub.ddns.net", "http://ec2-34-194-4-168.compute-1.amazonaws.com"] 
+    ? ["http://ijarahub.ddns.net", "http://ec2-34-194-4-168.compute-1.amazonaws.com", "http://34.194.4.168"]
     : ["http://localhost:3000"],
   credentials: true
 }));
@@ -54,7 +54,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api", apiLimiter);
 
 // Health check
-app.get("/health", (req, res) => {
+app.get("/api/health", (req, res) => {
   res.json({ status: "OK", timestamp: new Date().toISOString() });
 });
 
