@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import { SessionProvider } from "next-auth/react";
 import { GoogleSignInHandler } from "@/components/auth/google-signin";
+import ChatBot from "@/components/base/ui/ChatBot";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -42,6 +43,7 @@ export default function RootLayout({
         <SessionProvider>
           <GoogleSignInHandler />
           <main className="min-h-screen">{children}</main>
+          <ChatBot />
           <Toaster position="top-right" />
         </SessionProvider>
       </body>
