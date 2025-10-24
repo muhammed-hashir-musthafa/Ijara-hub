@@ -67,6 +67,8 @@ jobs:
           echo "AUTH_GOOGLE_ID=${{ secrets.AUTH_GOOGLE_ID }}" >> Client/.env
           echo "AUTH_GOOGLE_SECRET=${{ secrets.AUTH_GOOGLE_SECRET }}" >> Client/.env
           echo "NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}" >> Client/.env
+          echo "GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}" >> Client/.env
+          echo "GROQ_MODEL=${{ secrets.GROQ_MODEL }}" >> Client/.env
 
       - name: Pull latest images
         run: |
