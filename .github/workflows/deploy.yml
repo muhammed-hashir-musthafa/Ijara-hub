@@ -56,13 +56,7 @@ jobs:
 
       - name: Build and push Client image
         run: |
-          docker build \
-            --build-arg NEXT_PUBLIC_API_URL="${{ secrets.NEXT_PUBLIC_API_URL }}" \
-            --build-arg NEXT_PUBLIC_APP_NAME="${{ secrets.NEXT_PUBLIC_APP_NAME }}" \
-            --build-arg NEXT_PUBLIC_ENV="${{ secrets.NEXT_PUBLIC_ENV }}" \
-            --build-arg NEXT_PUBLIC_S3_BUCKET="${{ secrets.NEXT_PUBLIC_S3_BUCKET }}" \
-            --build-arg NEXT_PUBLIC_AWS_REGION="${{ secrets.NEXT_PUBLIC_AWS_REGION }}" \
-            -t hashir001/ijarahub:client-latest ./Client
+          docker build -t hashir001/ijarahub:client-latest ./Client
           docker push hashir001/ijarahub:client-latest
 
       - name: Build and push Server image
