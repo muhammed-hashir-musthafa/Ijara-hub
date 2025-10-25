@@ -15,8 +15,6 @@ services:
     container_name: ijara-client
     ports:
       - "3000:3000"
-    env_file:
-      - ./Client/.env
     depends_on:
       - server
     restart: always
