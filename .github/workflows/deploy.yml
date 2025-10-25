@@ -71,6 +71,39 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Create Server .env file
+        run: |
+          echo "PORT=${{ secrets.SERVER_PORT }}" > Server/.env
+          echo "MONGODB_URI=${{ secrets.SERVER_MONGODB_URI }}" >> Server/.env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> Server/.env
+          echo "JWT_EXPIRES_IN=${{ secrets.JWT_EXPIRES_IN }}" >> Server/.env
+          echo "NODE_ENV=${{ secrets.NODE_ENV }}" >> Server/.env
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> Server/.env
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> Server/.env
+          echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> Server/.env
+          echo "AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}" >> Server/.env
+
+      - name: Create Client .env file
+        run: |
+          echo "NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}" > Client/.env
+          echo "NEXT_PUBLIC_APP_NAME=${{ secrets.NEXT_PUBLIC_APP_NAME }}" >> Client/.env
+          echo "NEXT_PUBLIC_ENV=${{ secrets.NEXT_PUBLIC_ENV }}" >> Client/.env
+          echo "NEXT_PUBLIC_S3_BUCKET=${{ secrets.NEXT_PUBLIC_S3_BUCKET }}" >> Client/.env
+          echo "NEXT_PUBLIC_AWS_REGION=${{ secrets.NEXT_PUBLIC_AWS_REGION }}" >> Client/.env
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> Client/.env
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> Client/.env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> Client/.env
+          echo "RATE_LIMIT_WINDOW_MS=${{ secrets.RATE_LIMIT_WINDOW_MS }}" >> Client/.env
+          echo "RATE_LIMIT_MAX_REQUESTS=${{ secrets.RATE_LIMIT_MAX_REQUESTS }}" >> Client/.env
+          echo "API_RATE_LIMIT_MAX_REQUESTS=${{ secrets.API_RATE_LIMIT_MAX_REQUESTS }}" >> Client/.env
+          echo "AUTH_SECRET=${{ secrets.AUTH_SECRET }}" >> Client/.env
+          echo "AUTH_GOOGLE_ID=${{ secrets.AUTH_GOOGLE_ID }}" >> Client/.env
+          echo "AUTH_GOOGLE_SECRET=${{ secrets.AUTH_GOOGLE_SECRET }}" >> Client/.env
+          echo "AUTH_TRUST_HOST=${{ secrets.AUTH_TRUST_HOST }}" >> Client/.env
+          echo "NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}" >> Client/.env
+          echo "GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}" >> Client/.env
+          echo "GROQ_MODEL=${{ secrets.GROQ_MODEL }}" >> Client/.env
+
       - name: Pull latest images
         run: |
           docker pull hashir001/ijarahub:server-latest
