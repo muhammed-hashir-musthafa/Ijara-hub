@@ -14,6 +14,7 @@ RUN npm run build
 # --- Stage 3: run the app in production ---
 FROM node:20-alpine AS runner
 WORKDIR /app
+COPY --from=builder /app/.env* ./
 ENV NODE_ENV=production
 COPY --from=builder /app/dist ./dist
 COPY package.json ./
