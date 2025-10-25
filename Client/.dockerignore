@@ -1,3 +1,7 @@
+public
+.dockerignore
+README.md
+
 # Dependencies
 node_modules
 .pnp
