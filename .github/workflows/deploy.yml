@@ -21,23 +21,6 @@ jobs:
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKERHUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
 
-      - name: Build and push Client image
-        run: |
-          docker build -t hashir001/ijarahub:client-latest ./Client
-          docker push hashir001/ijarahub:client-latest
-
-      - name: Build and push Server image
-        run: |
-          docker build -t hashir001/ijarahub:server-latest ./Server
-          docker push hashir001/ijarahub:server-latest
-
-  deployaws:
-    needs: build-and-push
-    runs-on: self-hosted
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
       - name: Create Server .env file
         run: |
           echo "PORT=${{ secrets.SERVER_PORT }}" > Server/.env
@@ -70,6 +53,23 @@ jobs:
           echo "NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}" >> Client/.env
           echo "GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}" >> Client/.env
           echo "GROQ_MODEL=${{ secrets.GROQ_MODEL }}" >> Client/.env
+
+      - name: Build and push Client image
+        run: |
+          docker build -t hashir001/ijarahub:client-latest ./Client
+          docker push hashir001/ijarahub:client-latest
+
+      - name: Build and push Server image
+        run: |
+          docker build -t hashir001/ijarahub:server-latest ./Server
+          docker push hashir001/ijarahub:server-latest
+
+  deployaws:
+    needs: build-and-push
+    runs-on: self-hosted
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Pull latest images
         run: |
