@@ -61,7 +61,7 @@ app.use(
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "x-csrf-token"],
-    exposedHeaders: ["*", "Authorization"],
+    exposedHeaders: ["Authorization", "x-csrf-token"],
   })
 );
 app.use(express.json({ limit: "10mb" }));
