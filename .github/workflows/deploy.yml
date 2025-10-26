@@ -82,6 +82,8 @@ jobs:
           echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> Server/.env
           echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> Server/.env
           echo "AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}" >> Server/.env
+          echo "GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}" >> Server/.env
+          echo "GROQ_MODEL=${{ secrets.GROQ_MODEL }}" >> Server/.env
 
       - name: Create Client .env file
         run: |

@@ -16,9 +16,9 @@ export const GoogleSignInHandler = () => {
       setCookie("token", session.accessToken, 7);
       setCookie("userId", session.user.id, 7);
       setCookie("userRole", session.user.role, 7);
-      
+
       toast.success("Google login successful!");
-      
+
       // Redirect based on role like normal login
       if (session.user.role === "owner") {
         router.push("/owner");
@@ -34,5 +34,5 @@ export const GoogleSignInHandler = () => {
 };
 
 export const handleGoogleSignIn = () => {
-  signIn('google');
+  signIn("google", { callbackUrl: "/", redirect: true });
 };
