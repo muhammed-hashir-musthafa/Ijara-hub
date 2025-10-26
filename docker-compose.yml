@@ -8,6 +8,8 @@ services:
       - "5000:5000"
     env_file:
       - ./Server/.env
+    environment:
+      - NODE_ENV=production
     restart: always
 
   client:
