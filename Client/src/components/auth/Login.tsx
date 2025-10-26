@@ -298,12 +298,12 @@ export default function UnifiedLoginPage() {
                           Remember me
                         </Label>
                       </div>
-                      <Link
+                      {/* <Link
                         href="/forgot-password"
                         className="text-sm text-orange-600 hover:text-red-600 font-medium transition-colors"
                       >
                         Forgot password?
-                      </Link>
+                      </Link> */}
                     </div>
 
                     {/* Submit Button */}
