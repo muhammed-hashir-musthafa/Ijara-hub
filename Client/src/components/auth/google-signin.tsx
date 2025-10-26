@@ -1,20 +1,21 @@
 "use client";
 
-import { signIn, useSession } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { useEffect } from "react";
 import { setCookie } from "@/lib/cookies";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { useOAuthSession } from "@/lib/oauthSession";
 
 export const GoogleSignInHandler = () => {
-  const { data: session } = useSession();
+  const { data: session } = useOAuthSession();
   const router = useRouter();
 
   useEffect(() => {
     if (session?.accessToken && session?.user) {
       // Store cookies like normal login
       setCookie("token", session.accessToken, 7);
-      setCookie("userId", session.user.id, 7);
+      setCookie("userId", session.user._id || "", 7);
       setCookie("userRole", session.user.role, 7);
 
       toast.success("Google login successful!");
