@@ -15,7 +15,7 @@ export const useOAuthSession = () => {
   useEffect(() => {
     const fetchSession = async () => {
       try {
-        const res = await fetch("/api/oauth/session"); // your new endpoint
+        const res = await fetch("/api/auth/session"); // your new endpoint
         if (!res.ok) throw new Error("No session");
         const data = await res.json();
         setSession(data);
