@@ -22,7 +22,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({ token, account, user }) {
       if (account && user) {
         try {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/google`, {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/server-auth/google`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
