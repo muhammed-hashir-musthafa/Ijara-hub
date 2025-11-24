@@ -62,7 +62,7 @@ app.use(
             "ijara-hub.vercel.app",            
           ]
         : ["http://localhost:3000"],
-    credentials: true,
+    credentials: true, 
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "x-csrf-token"],
     exposedHeaders: ["Authorization", "x-csrf-token"],
