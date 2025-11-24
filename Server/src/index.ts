@@ -20,6 +20,9 @@ import { apiLimiter } from "./middleware/rateLimiter";
 const app = express();
 const server = http.createServer(app);
 
+// Connect to MongoDB
+connectDB();
+
 // trust proxy when deployed behind Render / Vercel / other proxies
 app.set("trust proxy", true);
 
