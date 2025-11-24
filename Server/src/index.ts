@@ -31,6 +31,8 @@ const io = new SocketIOServer(server, {
             "http://34.194.4.168",
             "https://ijarahub.ddns.net",
             "https://ec2-34-194-4-168.compute-1.amazonaws.com",
+            "https://ijara-hub.vercel.app",
+            "ijara-hub.vercel.app",
           ]
         : ["http://localhost:3000"],
     methods: ["GET", "POST", "PATCH"],
@@ -56,6 +58,8 @@ app.use(
             "http://ec2-34-194-4-168.compute-1.amazonaws.com",
             "https://ec2-34-194-4-168.compute-1.amazonaws.com",
             "http://34.194.4.168",
+            "https://ijara-hub.vercel.app",
+            "ijara-hub.vercel.app",            
           ]
         : ["http://localhost:3000"],
     credentials: true,
